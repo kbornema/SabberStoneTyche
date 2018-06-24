@@ -11,27 +11,23 @@ namespace SabberStoneCoreAi.Tyche.Learning
     {
 		private const float MIN_WEIGHT = 0.0f;
 		private const float MAX_WEIGHT = 10.0f;
+		
+		public float MutationDeviation = 2.0f;
+		public int PopulationSize = 10;
+		public int MatingPoolSize = 4;
+		public int OffspringSize = 4;
 
-		private const float MUTATION_DEVIATION = 2.0f;
-
-		private const int POPULATION_SIZE = 8;
-		private const int MATING_POOL_SIZE = 4;
-		private const int CHILD_POOL_SIZE = 4;
-
-		private const int ROUNDS = 100;
-		private const int MATCHES_PER_ROUND = 1;
-
-		private int _rounds;
-		private int _matchesPerRound;
-
-		private List<ParamLearner> _learners;
+		public int Rounds = 10;
+		public int MatchesPerRound = 5;
+		public string FileName = "result";
 
 		private System.Random _random;
 
+		private List<ParamLearner> _currentPopulation;
+
 		private List<string> _generationFileLog;
 		private List<string> _globalFileLog;
-
-		public string FileName = "result";
+		private int _individualId = 0;
 
 		public LearnSetup()
 		{
@@ -40,42 +36,41 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		public void Clear()
 		{
+			_individualId = 0;
+
 			_generationFileLog = new List<string>();
 			_globalFileLog = new List<string>();
 
-			_rounds = ROUNDS;
-			_matchesPerRound = MATCHES_PER_ROUND;
-
 			_random = new Random();
+			_currentPopulation = new List<ParamLearner>();
 
-			_learners = new List<ParamLearner>();
-
-			for (int i = 0; i < POPULATION_SIZE; i++)
+			for (int i = 0; i < PopulationSize; i++)
 			{
-				var learner = new ParamLearner(_random, MIN_WEIGHT, MAX_WEIGHT);
-				_learners.Add(learner);
+				var learner = new ParamLearner(_random, MIN_WEIGHT, MAX_WEIGHT, 0, _individualId);
+				_individualId++;
+				_currentPopulation.Add(learner);
 			}
 		}
 
-		public void Run(int numSteps, List<DeckHeroPair> myDeck, List<DeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		public void Run(int numGenerations, List<DeckHeroPair> myDeck, List<DeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
 		{
 			var myDeckName = DeckHeroPair.GetDeckListPrint(myDeck);
 			var enemyDeckName = DeckHeroPair.GetDeckListPrint(enemyDeck);
 
 			FileName = myDeckName + "Vs" + enemyDeckName +"_"+ enemyAgents[0].GetType().Name;
 
-			for (int step = 0; step < numSteps; step++)
+			for (int step = 0; step < numGenerations; step++)
 			{
 				var startDate = DateTime.Now;
 
-				for (int learnerId = 0; learnerId < _learners.Count; learnerId++)
+				for (int learnerId = 0; learnerId < _currentPopulation.Count; learnerId++)
 				{
-					var curLearner = _learners[learnerId];
+					var curLearner = _currentPopulation[learnerId];
 					curLearner.ResetStats();
 					ComputeFitness(curLearner, myDeck, enemyDeck, enemyAgents);
 				}
 
-				var children = GiveBirth(SelectFittest(_learners), _random);
+				var children = GiveBirth(SelectFittest(_currentPopulation), _random, step + 1);
 
 				for (int childId = 0; childId < children.Count; childId++)
 				{
@@ -86,10 +81,10 @@ namespace SabberStoneCoreAi.Tyche.Learning
 					ComputeFitness(childLearner, myDeck, enemyDeck, enemyAgents);
 				}
 
-				_learners = MixPopulations(_learners, children);
+				_currentPopulation = MixPopulations(_currentPopulation, children);
 
-				Log("Population " + (step));
-				LogPopulation(_learners);
+				Log("Generation " + (step));
+				LogPopulation(_currentPopulation);
 				var diff = DateTime.Now.Subtract(startDate);
 				Log("Generation took " + diff.Minutes + " min, " + diff.Seconds + " s");
 				WriteCurrentToFile(FileName + "_" + step.ToString("0000") + ".txt");
@@ -101,9 +96,9 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private void LogPopulation(List<ParamLearner> population)
 		{
-			for (int i = 0; i < _learners.Count; i++)
+			for (int i = 0; i < _currentPopulation.Count; i++)
 			{
-				Log(i + " ( winRate: " + population[i].WinPercent + ")");
+				Log("Id: " + _currentPopulation[i].Id + " (born: " + _currentPopulation[i].GenerationBorn + ", winRate: " + population[i].WinPercent + ")");
 				Log("Params: " + population[i].Parameter.ToString());
 			}
 		}
@@ -134,7 +129,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 			List<ParamLearner> newPopulaton = new List<ParamLearner>();
 
-			for (int i = 0; i < POPULATION_SIZE; i++)
+			for (int i = 0; i < PopulationSize; i++)
 				newPopulaton.Add(tmpPopulation[i]);
 
 			return newPopulaton;
@@ -145,11 +140,11 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			return y.WinPercent.CompareTo(x.WinPercent);
 		}
 
-		private List<ParamLearner> GiveBirth(List<ParamLearner> choosen, System.Random random)
+		private List<ParamLearner> GiveBirth(List<ParamLearner> choosen, System.Random random, int generation)
 		{
 			List<ParamLearner> children = new List<ParamLearner>();
 
-			for (int i = 0; i < CHILD_POOL_SIZE; i++)
+			for (int i = 0; i < OffspringSize; i++)
 			{
 				List<ParamLearner> parentsToChoose = new List<ParamLearner>(choosen);
 
@@ -161,9 +156,10 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				var second = parentsToChoose[secondId];
 
 				var childParams = ParamLearner.GetCrossedParams(first, second, random);
-				childParams = ParamLearner.GetMutatedParams(childParams, random, MUTATION_DEVIATION);
+				childParams = ParamLearner.GetMutatedParams(childParams, random, MutationDeviation);
 
-				children.Add(new ParamLearner(childParams));
+				children.Add(new ParamLearner(childParams, generation, _individualId));
+				_individualId++;
 			}
 
 			return children;
@@ -178,7 +174,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 			List<ParamLearner> fittest = new List<ParamLearner>();
 
-			for (int i = 0; i < MATING_POOL_SIZE; i++)
+			for (int i = 0; i < MatingPoolSize; i++)
 				fittest.Add(copyLearners[i]);
 
 			return fittest;
@@ -192,7 +188,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			var myAgentList = new List<AbstractAgent> { myAgent };
 
 			MatchSetup training = new MatchSetup(myAgentList, enemyAgents, false);
-			training.RunRounds(myDeck, enemyDeck, _rounds, _matchesPerRound);
+			training.RunRounds(myDeck, enemyDeck, Rounds, MatchesPerRound);
 
 			learner.AddStats(training.TotalPlays, training.Agent0Wins);
 		}

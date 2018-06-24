@@ -13,8 +13,9 @@ namespace SabberStoneCoreAi.Tyche
 
 		public static StateAnalyzer GetDefault()
 		{
-			float[] parameter = { 1.0f, 8.7f, 1.0f, 1.0f, 1.0f };
-			return new StateAnalyzer(new StateAnalyzerParams(parameter));
+			StateAnalyzerParams p = new StateAnalyzerParams(1.0f);
+			p.SetFactor(StateAnalyzerParams.FactorType.HealthFactor, 8.7f);
+			return new StateAnalyzer(new StateAnalyzerParams(p));
 		}
 
 		public StateAnalyzer()

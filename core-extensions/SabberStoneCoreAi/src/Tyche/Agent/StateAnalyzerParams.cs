@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace SabberStoneCoreAi.Tyche
@@ -57,7 +58,7 @@ namespace SabberStoneCoreAi.Tyche
 			string s = "";
 
 			for (int i = 0; i < _factors.Length; i++)
-				s += _factors[i] + "; ";
+				s += _factors[i].ToString(CultureInfo.InvariantCulture) + ", ";
 
 			return s;
 		}

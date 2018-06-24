@@ -13,18 +13,26 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		private StateAnalyzerParams _parameter;
 		public StateAnalyzerParams Parameter { get { return _parameter; } }
 
-		public ParamLearner(StateAnalyzerParams p)
+		private int _id = -1;
+		public int Id { get { return _id; } }
+
+		private int _generationBorn = -1;
+		public int GenerationBorn { get { return _generationBorn; } }
+
+		public ParamLearner(StateAnalyzerParams p, int generation, int id)
 		{
+			_id = id;
 			_parameter = p;
+			_generationBorn = generation;
 		}
 
-		public ParamLearner()
-			: this(new StateAnalyzerParams())
+		public ParamLearner(int generation, int id)
+			: this(new StateAnalyzerParams(), generation, id)
 		{
 		}
 
-		public ParamLearner(System.Random random, float minWeight, float maxWeight)
-			: this(new StateAnalyzerParams(random, minWeight, maxWeight))
+		public ParamLearner(System.Random random, float minWeight, float maxWeight, int generation, int id)
+			: this(new StateAnalyzerParams(random, minWeight, maxWeight), generation, id)
 		{
 		}
 

@@ -1,5 +1,7 @@
 ﻿using SabberStoneCore.Tasks;
 using SabberStoneCoreAi.Agent;
+using SabberStoneCoreAi.POGame;
+using SabberStoneCoreAi.Tyche.Testing;
 using System;
 using System.Collections.Generic;
 
@@ -10,20 +12,18 @@ namespace SabberStoneCoreAi.Tyche
 	{
 		private Random _random;
 
-		private StateAnalyzer _stateAnalyzer;
-		public StateAnalyzer Analyzer {get { return _stateAnalyzer; } }
+		private StateAnalyzer _analyzer;
+		public StateAnalyzer Analyzer { get { return _analyzer; } }
+
+		private bool _hasInitialized;
+		private POGame.POGame _initialState;
 
 		public TycheAgent()
 		{
-			_stateAnalyzer = StateAnalyzer.GetDefault();
+			_analyzer = StateAnalyzer.GetDefault();
 			_random = new Random();
 		}
-
-		public override void InitializeAgent() {}
-		public override void FinalizeAgent() {}
-		public override void FinalizeGame() {}
-		public override void InitializeGame() {}
-
+		
 		private PlayerTask GetGreedyBestTask(POGame.POGame poGame)
 		{
 			var options = poGame.CurrentPlayer.Options();
@@ -37,6 +37,8 @@ namespace SabberStoneCoreAi.Tyche
 			int bestStateIndex = -1;
 			float bestStateValue = Single.NegativeInfinity;
 
+
+			List<PlayerTask> buggyTasks = new List<PlayerTask>();
 			HashSet<PlayerTask> isLosingTask = new HashSet<PlayerTask>();
 
 			for (int i = 0; i < options.Count; i++)
@@ -44,15 +46,18 @@ namespace SabberStoneCoreAi.Tyche
 				var resultState = simulationResults[options[i]];
 
 				if (resultState == null)
+				{
+					buggyTasks.Add(options[i]);
 					continue;
+				}
 							
 				float stateValue = 0.0f;
 
 				//after END_TURN the players will be swapped:
 				if (options[i].PlayerTaskType == PlayerTaskType.END_TURN)
-					stateValue = _stateAnalyzer.GetStateValue(resultState, resultState.CurrentOpponent, resultState.CurrentPlayer);
+					stateValue = _analyzer.GetStateValue(resultState, resultState.CurrentOpponent, resultState.CurrentPlayer);
 				else
-					stateValue = _stateAnalyzer.GetStateValue(resultState, resultState.CurrentPlayer, resultState.CurrentOpponent);
+					stateValue = _analyzer.GetStateValue(resultState, resultState.CurrentPlayer, resultState.CurrentOpponent);
 
 				//if the player wins, just choose this Task immediately:
 				if (Single.IsPositiveInfinity(stateValue))
@@ -62,7 +67,7 @@ namespace SabberStoneCoreAi.Tyche
 					isLosingTask.Add(options[i]);
 
 				if (bestStateIndex == -1 || stateValue > bestStateValue)
-				{
+				{	
 					bestStateValue = stateValue;
 					bestStateIndex = i;
 				}
@@ -84,8 +89,13 @@ namespace SabberStoneCoreAi.Tyche
 				return tasksToChoose.GetUniformRandom(_random);
 			}
 
-			//TODO: in case of warrior it might be better, to use actually other PlayerTasks that have resulted in null, of the best option is not THAT promising
-			//TODO: find out if the task is promising in case of buggy PlayerTasks:
+			if(buggyTasks.Count > 0)
+			{
+				//TODO: in case of warrior it might be better, to use actually other PlayerTasks that have resulted in null, of the best option is not THAT promising
+				//TODO: find out if the task is promising in case of buggy PlayerTasks:
+				//e.g. compute average state values, and pick a random action of the best action is below average
+			}
+
 			return options[bestStateIndex];
 		}
 
@@ -106,8 +116,28 @@ namespace SabberStoneCoreAi.Tyche
 		}
 
 		public override PlayerTask GetMove(POGame.POGame poGame)
-		{		
+		{
+			if (!_hasInitialized)
+				CustomInit(poGame);
+
 			return GetGreedyBestTask(poGame);
 		}
+
+		private void CustomInit(POGame.POGame poGame)
+		{
+			_hasInitialized = true;
+			_initialState = poGame;
+
+			//TODO: find out who is playing against who and choose StateAnalyzer weights accordingly:
+		}
+
+		public override void InitializeGame()
+		{
+			_hasInitialized = false;
+		}
+
+		public override void InitializeAgent() { }
+		public override void FinalizeAgent() { }
+		public override void FinalizeGame() { }
 	}
 }

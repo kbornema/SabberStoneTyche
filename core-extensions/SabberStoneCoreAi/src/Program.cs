@@ -9,17 +9,19 @@ using System.Collections.Generic;
 namespace SabberStoneCoreAi
 {
 	internal class Program
-	{	
+	{
 		private static void Main(string[] args)
 		{
-		
+
 			var allDecks = ExamDecks.GetAll();
-			/*
+
 			var warriorDeck = ExamDecks.GetWarriorAsList();
 			var mageDeck = ExamDecks.GetMageAsList();
 			var shamanDeck = ExamDecks.GetShamanAsList();
 
-			var allEnemyAgents = new List<AbstractAgent> { GetAgent(Agent.RandomLate) , GetAgent(Agent.Random) , GetAgent(Agent.FaceHunter) };
+			var allEnemyAgents = new List<AbstractAgent> { GetAgent(Agent.RandomLate), GetAgent(Agent.Random), GetAgent(Agent.FaceHunter) };
+
+			var botB = new List<AbstractAgent> { new BotB.BotB() };
 			var randomLateAgent = new List<AbstractAgent> { GetAgent(Agent.RandomLate) };
 			var randomAgent = new List<AbstractAgent> { GetAgent(Agent.Random) };
 			var faceHunterAgent = new List<AbstractAgent> { GetAgent(Agent.FaceHunter) };
@@ -28,19 +30,19 @@ namespace SabberStoneCoreAi
 
 			LearnSetup learnSetup = new LearnSetup();
 
-			learnSetup.Clear();
-			learnSetup.Run(GENERATIONS, mageDeck, mageDeck, randomLateAgent);
+			//learnSetup.Clear();
+			//learnSetup.Run(GENERATIONS, mageDeck, mageDeck, botB);
+
+			//learnSetup.Clear();
+			//learnSetup.Run(GENERATIONS, warriorDeck, warriorDeck, botB);
 
 			learnSetup.Clear();
-			learnSetup.Run(GENERATIONS, mageDeck, mageDeck, randomAgent);
+			learnSetup.Run(GENERATIONS, shamanDeck, shamanDeck, botB);
+			
 
-			learnSetup.Clear();
-			learnSetup.Run(GENERATIONS, mageDeck, mageDeck, faceHunterAgent);
-			*/
-
-
-			const int ROUNDS = 20;
-			const int MATCHES_PER_ROUND = 5;
+			/*
+			const int ROUNDS = 100;
+			const int MATCHES_PER_ROUND = 10;
 
 			Debug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
 			
@@ -51,10 +53,10 @@ namespace SabberStoneCoreAi
 			MatchSetup training = new MatchSetup(myAgent, enemyAgent, false);
 			training.RunRounds(allDecks, allDecks, ROUNDS, MATCHES_PER_ROUND);
 			training.PrintFinalResults();
-			
-			
+
 			Debug.LogInfo("Press a key to close.");
 			Console.ReadLine();
+			*/
 		}
 
 		enum Agent

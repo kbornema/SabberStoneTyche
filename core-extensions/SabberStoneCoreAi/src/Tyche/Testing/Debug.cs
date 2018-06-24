@@ -30,7 +30,7 @@ namespace SabberStoneCoreAi.Tyche.Testing
 
 		public static void Log(LogLevel logLevel, object message, [CallerFilePath] string filePath = "", [CallerMemberName] string memberName = "", [CallerLineNumber] int lineNumber = 0)
 		{
-			Log(GetLogLevelString(logLevel), message, LogColors[(int)logLevel]);
+			Log(GetLogLevelString(logLevel), message, LogColors[(int)logLevel], filePath, memberName, lineNumber);
 		}
 
 		public static void Log(string logLevelString, object message, ConsoleColor color, [CallerFilePath] string filePath = "", [CallerMemberName] string memberName = "", [CallerLineNumber] int lineNumber = 0)
