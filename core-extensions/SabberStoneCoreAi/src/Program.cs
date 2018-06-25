@@ -29,13 +29,13 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.Random),
 														GetAgent(Agent.BotB) };
 
-			DebugTest();
+			//DebugTest();
 
-			//if (args.Length == 0)
-			//	DebugLearn();
+			if (args.Length == 0)
+				DebugLearn();
 
-			//else
-			//	LearnFromExe(args);
+			else
+				LearnFromExe(args);
 		}
 
 		private static void DebugTest()
@@ -48,9 +48,9 @@ namespace SabberStoneCoreAi
 			for (int i = 0; i < _allEnemyAgents.Count * 4; i++)
 			{	
 				var myAgent = new TycheAgent();
-				var enemyAgent = _allEnemyAgents[i % _allEnemyAgents.Count];
+				var enemyAgent = GetAgent(Agent.BotB); // _allEnemyAgents[i % _allEnemyAgents.Count];
 
-				var deck = RandMirrorDeck(); //DeckFromEnum(DeckFu.Warrior); 
+				var deck = DeckFromEnum(DeckFu.Warrior); 
 				MatchSetup training = new MatchSetup(myAgent, enemyAgent, false);
 				training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
 				training.PrintFinalResults();

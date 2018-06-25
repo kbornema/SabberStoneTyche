@@ -25,7 +25,6 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private List<ParamLearner> _currentPopulation;
 
-		private List<string> _generationFileLog;
 		private List<string> _globalFileLog;
 		private int _individualId = 0;
 
@@ -37,8 +36,6 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		public void Clear()
 		{
 			_individualId = 0;
-
-			_generationFileLog = new List<string>();
 			_globalFileLog = new List<string>();
 
 			_random = new Random();
@@ -90,10 +87,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				var diff = DateTime.Now.Subtract(startDate);
 				Log("Generation took " + diff.Minutes + " min, " + diff.Seconds + " s");
 				WriteCurrentToFile(FileName + "_" + step.ToString("0000") + ".txt");
-				_generationFileLog.Clear();
 			}
-
-			WriteGlobalToFile();
 		}
 
 		private void LogPopulation(List<ParamLearner> population)
@@ -110,7 +104,6 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		private void Log(string s)
 		{
 			_globalFileLog.Add(s);
-			_generationFileLog.Add(s);
 			Debug.LogInfo(s);
 		}
 
@@ -121,7 +114,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private void WriteCurrentToFile(string fileName)
 		{
-			File.WriteAllLines(fileName, _generationFileLog);
+			File.WriteAllLines(fileName, _globalFileLog);
 		}
 
 		private List<ParamLearner> MixPopulations(List<ParamLearner> oldPopulation, List<ParamLearner> offspring)
