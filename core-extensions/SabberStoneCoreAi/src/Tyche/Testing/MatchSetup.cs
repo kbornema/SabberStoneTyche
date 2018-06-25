@@ -38,7 +38,8 @@ namespace SabberStoneCoreAi.Tyche.Testing
 
 		public void PrintFinalResults()
 		{
-			Debug.LogInfo("Final results: " + _agents0.GetType().Name + ": " + ((float)_agent0Wins/(float)_totalPlays) * 100.0f + "% vs " + _agents1.GetType().Name + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%");
+			
+			Debug.LogInfo("Final results: " + _agents0.GetTypeNames() + ": " + ((float)_agent0Wins/(float)_totalPlays) * 100.0f + "% vs " + _agents1.GetTypeNames() + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%");
 		}
 
 		public void RunRounds(List<DeckHeroPair> decks0, List<DeckHeroPair> decks1, int rounds, int matchesPerRound)

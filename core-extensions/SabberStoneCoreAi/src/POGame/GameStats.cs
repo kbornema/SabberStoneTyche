@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using SabberStoneCore.Enums;
@@ -14,8 +14,6 @@ namespace SabberStoneCoreAi.POGame
 		private double[] time_per_player = new[] {0D, 0D};
 		private int[] exception_count = new[] {0, 0};
 		private Dictionary<int, string> exceptions = new Dictionary<int, string>();
-
-		//Todo add getter for each private variable
 
 		public GameStats()
 		{

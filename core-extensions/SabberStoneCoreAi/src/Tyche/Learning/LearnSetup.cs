@@ -56,8 +56,9 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		{
 			var myDeckName = DeckHeroPair.GetDeckListPrint(myDeck);
 			var enemyDeckName = DeckHeroPair.GetDeckListPrint(enemyDeck);
-
 			FileName = myDeckName + "Vs" + enemyDeckName +"_"+ enemyAgents[0].GetType().Name;
+			Debug.LogInfo(FileName);
+			Debug.LogInfo("Generations: " + numGenerations);
 
 			for (int step = 0; step < numGenerations; step++)
 			{
@@ -68,6 +69,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 					var curLearner = _currentPopulation[learnerId];
 					curLearner.ResetStats();
 					ComputeFitness(curLearner, myDeck, enemyDeck, enemyAgents);
+					
 				}
 
 				var children = GiveBirth(SelectFittest(_currentPopulation), _random, step + 1);
@@ -98,8 +100,10 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		{
 			for (int i = 0; i < _currentPopulation.Count; i++)
 			{
-				Log("Id: " + _currentPopulation[i].Id + " (born: " + _currentPopulation[i].GenerationBorn + ", winRate: " + population[i].WinPercent + ")");
-				Log("Params: " + population[i].Parameter.ToString());
+				var curLearner = _currentPopulation[i];
+
+				Log("Id: " + curLearner.Id + " (born: " + curLearner.GenerationBorn + ", winRate: " + curLearner.WinPercent + " (min: "+ curLearner.MinWinPercent + ", max: " + curLearner.MaxWinPercent + ", avg: " + curLearner.AverageWinPercent + "))");
+				Log("Params: " + curLearner.Parameter.ToString());
 			}
 		}
 
@@ -191,6 +195,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			training.RunRounds(myDeck, enemyDeck, Rounds, MatchesPerRound);
 
 			learner.AddStats(training.TotalPlays, training.Agent0Wins);
+			learner.RememberWinPercent();
 		}
     }
 }

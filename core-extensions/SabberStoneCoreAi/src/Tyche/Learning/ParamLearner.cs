@@ -13,6 +13,15 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		private StateAnalyzerParams _parameter;
 		public StateAnalyzerParams Parameter { get { return _parameter; } }
 
+		private float _averageWinPercent = 0.0f;
+		public float AverageWinPercent { get { return _averageWinPercent; } }
+
+		private float _minWinPercent = Single.PositiveInfinity;
+		public float MinWinPercent { get { return _minWinPercent; } }
+
+		private float _maxWinPercent = Single.NegativeInfinity;
+		public float MaxWinPercent { get { return _maxWinPercent; } }
+
 		private int _id = -1;
 		public int Id { get { return _id; } }
 
@@ -34,6 +43,23 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		public ParamLearner(System.Random random, float minWeight, float maxWeight, int generation, int id)
 			: this(new StateAnalyzerParams(random, minWeight, maxWeight), generation, id)
 		{
+		}
+
+		public void RememberWinPercent()
+		{
+			float winPercent = WinPercent;
+
+			if (winPercent > _maxWinPercent)
+				_maxWinPercent = winPercent;
+
+			if (winPercent < _minWinPercent)
+				_minWinPercent = winPercent;
+
+			if(_averageWinPercent == 0.0f)
+				_averageWinPercent = winPercent;
+
+			else
+				_averageWinPercent = Utility.Lerp(_averageWinPercent, winPercent, 0.5f);
 		}
 
 		public void AddStats(int matches, int wins)

@@ -32,5 +32,22 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			return list[random.Next(list.Count)];
 		}
+
+		public static string GetTypeNames<T>(this List<T> list, string seperator = ", ")
+		{
+			string result = "";
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				string curSeperator = seperator;
+
+				if(i == list.Count - 1)
+					curSeperator = "";
+
+				result += list[i].GetType().Name + curSeperator;
+			}
+
+			return result;
+		}
 	}
 }

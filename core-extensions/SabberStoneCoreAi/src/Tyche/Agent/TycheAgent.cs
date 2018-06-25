@@ -34,48 +34,72 @@ namespace SabberStoneCoreAi.Tyche
 
 			var simulationResults = poGame.Simulate(options);
 
-			int bestStateIndex = -1;
 			float bestStateValue = Single.NegativeInfinity;
 
-
-			List<PlayerTask> buggyTasks = new List<PlayerTask>();
+			List<PlayerTask> bestTasks = new List<PlayerTask>();
 			HashSet<PlayerTask> isLosingTask = new HashSet<PlayerTask>();
 
 			for (int i = 0; i < options.Count; i++)
 			{
 				var resultState = simulationResults[options[i]];
+				var choosenOption = options[i];
 
+				CustomState myState = null; 
+				CustomState enemyState  = null;
+
+				//it's a buggy state, mostly related to equipping/using weapons on heroes etc.
+				//in this case use the old state and estimate the new state manually:
 				if (resultState == null)
-				{
-					buggyTasks.Add(options[i]);
-					continue;
+				{	
+					myState = CustomState.FromSimulatedGame(poGame, poGame.CurrentPlayer);
+					enemyState = CustomState.FromSimulatedGame(poGame, poGame.CurrentOpponent);
+					CustomState.EstimateBuggySimulation(myState, enemyState, poGame, choosenOption);
+					//no need to swap states here (like below), since the swap did NOT already occur in the old poGame:
 				}
-							
-				float stateValue = 0.0f;
 
-				//after END_TURN the players will be swapped:
-				if (options[i].PlayerTaskType == PlayerTaskType.END_TURN)
-					stateValue = _analyzer.GetStateValue(resultState, resultState.CurrentOpponent, resultState.CurrentPlayer);
 				else
-					stateValue = _analyzer.GetStateValue(resultState, resultState.CurrentPlayer, resultState.CurrentOpponent);
+				{
+					myState = CustomState.FromSimulatedGame(resultState, resultState.CurrentPlayer);
+					enemyState = CustomState.FromSimulatedGame(resultState, resultState.CurrentOpponent);
 
+					//after END_TURN the players will be swapped for the sumlated resultState:
+					if (choosenOption.PlayerTaskType == PlayerTaskType.END_TURN)
+					{
+						CustomState tmpState = myState;
+						myState = enemyState;
+						enemyState = tmpState;
+					}
+				}
+
+				float stateValue = _analyzer.GetStateValue(myState, enemyState);
+				
 				//if the player wins, just choose this Task immediately:
 				if (Single.IsPositiveInfinity(stateValue))
-					return options[i];
+					return choosenOption;
 
 				if (Single.IsNegativeInfinity(stateValue))
-					isLosingTask.Add(options[i]);
+				{
+					isLosingTask.Add(choosenOption);
+					continue;
+				}
 
-				if (bestStateIndex == -1 || stateValue > bestStateValue)
-				{	
-					bestStateValue = stateValue;
-					bestStateIndex = i;
+				if (bestTasks.Count == 0 || stateValue >= bestStateValue)
+				{
+					if(stateValue > bestStateValue)
+					{
+						//if the new task is better, remove all the old best tasks:
+						bestTasks.Clear();
+						bestStateValue = stateValue;
+					}
+
+					bestTasks.Add(choosenOption);
 				}
 			}
 
+
 			//could not find a best state, either all of them are buggy or they are losing states:
-			if (bestStateIndex == -1)
-			{	
+			if (bestTasks.Count == 0)
+			{
 				var tasksToChoose = new List<PlayerTask>(options);
 
 				//remove all tasks where the player loses:
@@ -89,14 +113,7 @@ namespace SabberStoneCoreAi.Tyche
 				return tasksToChoose.GetUniformRandom(_random);
 			}
 
-			if(buggyTasks.Count > 0)
-			{
-				//TODO: in case of warrior it might be better, to use actually other PlayerTasks that have resulted in null, of the best option is not THAT promising
-				//TODO: find out if the task is promising in case of buggy PlayerTasks:
-				//e.g. compute average state values, and pick a random action of the best action is below average
-			}
-
-			return options[bestStateIndex];
+			return bestTasks.GetUniformRandom(_random);
 		}
 
 		private PlayerTask GetRandomTaskNonTurnEnd(POGame.POGame poGame, List<PlayerTask> options)
@@ -123,12 +140,13 @@ namespace SabberStoneCoreAi.Tyche
 			return GetGreedyBestTask(poGame);
 		}
 
-		private void CustomInit(POGame.POGame poGame)
+		private void CustomInit(POGame.POGame initialState)
 		{
 			_hasInitialized = true;
-			_initialState = poGame;
+			_initialState = initialState;
 
 			//TODO: find out who is playing against who and choose StateAnalyzer weights accordingly:
+			//e.g. warrior vs. warrior weights, mage vs mage weights etc.
 		}
 
 		public override void InitializeGame()

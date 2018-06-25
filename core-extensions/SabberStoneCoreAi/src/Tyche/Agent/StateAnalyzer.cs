@@ -4,7 +4,7 @@ using System;
 namespace SabberStoneCoreAi.Tyche
 {	
 	/// <summary>
-	///	Computation of states based on
+	///	Original idea of state estimation based on:
 	/// https://www.reddit.com/r/hearthstone/comments/7l1ob0/i_wrote_a_masters_thesis_on_effective_hearthstone/
 	/// </summary>
 	class StateAnalyzer
@@ -28,108 +28,73 @@ namespace SabberStoneCoreAi.Tyche
 			Parameter = _parameter;
 		}
 
-		public float GetStateValue(POGame.POGame state, Controller me, Controller opponent)
+		public float GetStateValue(CustomState player, CustomState enemy)
 		{
-			if (HasLost(opponent))
+			if (HasLost(enemy))
 				return Single.PositiveInfinity;
 
-			else if (HasLost(me))
+			else if (HasLost(player))
 				return Single.NegativeInfinity;
 
-			float playerValue = GetStateValueFor(state, me, opponent);
-			float opponentValue = GetStateValueFor(state, opponent, me);
+			float playerValue = GetStateValueFor(player, enemy);
+			float opponentValue = GetStateValueFor(enemy, player);
 			return playerValue - opponentValue;
 		}
 
-		private float GetStateValueFor(POGame.POGame state, Controller me, Controller opponent)
+		private float GetStateValueFor(CustomState player, CustomState enemy)
 		{
-			float emptyFieldValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.EmptyField) * GetEmptyFieldValue(state.Turn, opponent);
-			float healthValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.HealthFactor) * GetHeroHealthValue(me);
-			float deckValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.DeckFactor) * GetDeckValue(me);
-			float handValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.HandFactor) * GetHandValues(me);
-			float minionValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.MinionFactor) * GetMinionsValue(me);
+			float emptyFieldValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.EmptyField) * GetEmptyFieldValue(enemy);
+			float healthValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.HealthFactor) * GetHeroHealthArmorValue(player);
+			float deckValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.DeckFactor) * GetDeckValue(player);
+			float handValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.HandFactor) * GetHandValues(player);
+			float minionValue = Parameter.GetFactor(StateAnalyzerParams.FactorType.MinionFactor) * GetMinionValues(player);
 
 			return emptyFieldValue + deckValue + healthValue + handValue + minionValue;
 		}
 
-		private bool HasLost(Controller me)
+		private float GetMinionValues(CustomState player)
 		{
-			if (me.Hero.Health <= 0)
+			//treat the hero weapon as an additional minion with damage and health:
+			return player.MinionValues + (player.WeaponDamage + player.WeaponDurability);
+		}
+
+		private bool HasLost(CustomState player)
+		{
+			if (player.HeroHealth <= 0)
 				return true;
 
 			return false;
 		}
 
 		/// <summary> Gives points for clearing clearing the minion zone of the given opponent. </summary>
-		private float GetEmptyFieldValue(int turn, Controller opponent)
+		private float GetEmptyFieldValue(CustomState state)
 		{
 			//its better to clear the board in later stages of the game (more enemies might appear each round):
-			if (opponent.BoardZone.Count == 0)
-				return 2.0f + Math.Min((float)turn, 10.0f);
+			if (state.NumMinionsOnBoard == 0)
+				return 2.0f + Math.Min((float)state.TurnNumber, 10.0f);
 
 			return 0.0f;
 		}
 
 		/// <summary> Gives points for having cards in the deck. Having no cards give additional penality. </summary>
-		private float GetDeckValue(Controller c)
+		private float GetDeckValue(CustomState state)
 		{
-			int numCards = c.DeckZone.Count;
-			return (float)Math.Sqrt((double)numCards) - (float)c.Hero.Fatigue;
+			int numCards = state.NumDeckCards;
+			return (float)Math.Sqrt((double)numCards) - (float)state.Fatigue;
 		}
 
 		/// <summary> Gives points for having health. </summary>
-		private float GetHeroHealthValue(Controller controller)
+		private float GetHeroHealthArmorValue(CustomState state)
 		{
-			return (float)Math.Sqrt((double)controller.Hero.Health);
+			return (float)Math.Sqrt((double)(state.HeroHealth + state.HeroArmor));
 		}
 
 		/// <summary> Gives points for having cards in the hand. </summary>
-		private float GetHandValues(Controller controller)
+		private float GetHandValues(CustomState state)
 		{
-			int numCards = controller.HandZone.Count;
-			int firstThree = Math.Min(numCards, 3);
-			int remaining = Math.Abs(numCards - firstThree);
+			int firstThree = Math.Min(state.NumHandCards, 3);
+			int remaining = Math.Abs(state.NumHandCards - firstThree);
 			return 3 * firstThree + 2 * remaining;
-		}
-	
-		/// <summary> Gives points for the minions in the minion zone (health+dmg) </summary>
-		private float GetMinionsValue(Controller controller)
-		{
-			float value = 0.0f;
-
-			var boardZone = controller.BoardZone;
-
-			for (int i = 0; i < boardZone.Count; i++)
-			{
-				var minion = boardZone[i];
-				value += (minion.Health + minion.Damage);
-
-				if (minion.HasWindfury)
-					value += minion.Damage;
-
-				if (minion.HasCharge)
-					value += 1;
-
-				if (minion.HasDeathrattle)
-					value += 2;
-
-				if (minion.HasInspire)
-					value += 2;
-
-				if (minion.HasDivineShield)
-					value += 2;
-
-				if (minion.HasLifeSteal)
-					value += 2;
-
-				if (minion.HasStealth)
-					value += 1;
-
-				if (minion.HasBattleCry)
-					value += 1;
-			}
-
-			return value;
 		}
 	}
 }
