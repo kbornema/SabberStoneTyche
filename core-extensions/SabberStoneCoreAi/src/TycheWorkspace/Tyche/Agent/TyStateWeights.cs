@@ -173,18 +173,20 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			if (myClass == CardClass.WARRIOR)
 			{
-				return new TyStateWeights(1.322651f, 4.013905f, 6.45684f, 6.764077f, 7.349644f);
+				//old: 1.580433f, 8.778511f,	7.78354f, 7.201142f, 8.289609f
+				return new TyStateWeights(1.495044f, 9.781904f, 6.516459f, 8.087907f, 7.545108f);
 			}
 
 			else if (myClass == CardClass.SHAMAN)
 			{
-				return new TyStateWeights(6.003592f, 8.370952f, 3.456434f, 5.274337f, 2.222729f);
+				//old: 6.003592f, 8.370952f, 3.456434f, 5.274337f, 2.222729f
+				return new TyStateWeights(0.7755456f, 0.9294491f, 7.154047f, 9.464943f, 5.366156f);
 			}
 
 			else if (myClass == CardClass.MAGE)
 			{
-				//1.154733f, 5.872955f, 7.000044f, 7.834682f, 10f,
-				return new TyStateWeights(0.26369f, 5.311966f, 1.190827f, 6.026119f, 3.145358f);
+				//old: 0.26369f, 5.311966f, 1.190827f, 6.026119f, 3.145358f
+				return new TyStateWeights(6.917449f, 8.021517f, 10.0f, 7.317904f, 7.429502f);
 			}
 
 			//TODO:
