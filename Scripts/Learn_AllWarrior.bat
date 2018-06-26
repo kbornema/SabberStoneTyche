@@ -1,0 +1,3 @@
+Learn_WarriorVsWarrior.bat
+Learn_WarriorVsMage.bat
+Learn_WarriorVsShaman.bat
