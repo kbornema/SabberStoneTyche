@@ -6,41 +6,41 @@ using System.Text;
 
 namespace SabberStoneCoreAi.Tyche.Testing
 {
-    class ExamDecks
+    class TyExamDecks
     {	
-		public static List<DeckHeroPair> GetAll()
+		public static List<TyDeckHeroPair> GetAll()
 		{
-			return new List<DeckHeroPair>() { GetShamanDeck(), GetMageDeck(), GetWarriorDeck() };
+			return new List<TyDeckHeroPair>() { GetShamanDeck(), GetMageDeck(), GetWarriorDeck() };
 		}
 
-		public static List<DeckHeroPair> GetWarriorAsList()
+		public static List<TyDeckHeroPair> GetWarriorAsList()
 		{
-			return new List<DeckHeroPair>() { GetWarriorDeck() };
+			return new List<TyDeckHeroPair>() { GetWarriorDeck() };
 		}
 
-		public static List<DeckHeroPair> GetShamanAsList()
+		public static List<TyDeckHeroPair> GetShamanAsList()
 		{
-			return new List<DeckHeroPair>() { GetShamanDeck() };
+			return new List<TyDeckHeroPair>() { GetShamanDeck() };
 		}
 
-		public static List<DeckHeroPair> GetMageAsList()
+		public static List<TyDeckHeroPair> GetMageAsList()
 		{
-			return new List<DeckHeroPair>() { GetMageDeck() };
+			return new List<TyDeckHeroPair>() { GetMageDeck() };
 		}
 
-		public static DeckHeroPair GetShamanDeck()
+		public static TyDeckHeroPair GetShamanDeck()
 		{
-			return new DeckHeroPair(Decks.MidrangeJadeShaman, CardClass.SHAMAN, "MidrangeJadeShaman");
+			return new TyDeckHeroPair(Decks.MidrangeJadeShaman, CardClass.SHAMAN, "MidrangeJadeShaman");
 		}
 
-		public static DeckHeroPair GetMageDeck()
+		public static TyDeckHeroPair GetMageDeck()
 		{
-			return new DeckHeroPair(Decks.RenoKazakusMage, CardClass.MAGE, "RenoKazakusMage");
+			return new TyDeckHeroPair(Decks.RenoKazakusMage, CardClass.MAGE, "RenoKazakusMage");
 		}
 
-		public static DeckHeroPair GetWarriorDeck()
+		public static TyDeckHeroPair GetWarriorDeck()
 		{
-			return new DeckHeroPair(Decks.AggroPirateWarrior, CardClass.WARRIOR, "AggroPirateWarrior");
+			return new TyDeckHeroPair(Decks.AggroPirateWarrior, CardClass.WARRIOR, "AggroPirateWarrior");
 		}
 	}
 }

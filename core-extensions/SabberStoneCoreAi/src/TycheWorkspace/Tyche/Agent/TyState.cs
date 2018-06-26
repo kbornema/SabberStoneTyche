@@ -51,7 +51,7 @@ namespace SabberStoneCoreAi.Tyche
 			return s;
 		}
 
-		public static void EstimateBuggySimulation(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask task)
+		public static void CorrectBuggySimulation(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask task)
 		{	
 			var taskType = task.PlayerTaskType;
 

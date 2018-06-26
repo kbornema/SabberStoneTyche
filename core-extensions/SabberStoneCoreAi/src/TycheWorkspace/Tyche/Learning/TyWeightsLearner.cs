@@ -6,9 +6,11 @@ namespace SabberStoneCoreAi.Tyche.Learning
 {
     class TyWeightsLearner
 	{
+		public float Fitness { get { return _averageWinPercent; } }
+
 		private int _wins = 0;
 		private int _matches = 0;
-		public float WinPercent { get { return (float)_wins / (float)_matches; } }
+		public float CurWinPercent { get { return (float)_wins / (float)_matches; } }
 
 		private TyStateWeights _weights;
 		public TyStateWeights Weights { get { return _weights; } }
@@ -21,6 +23,9 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private float _maxWinPercent = Single.NegativeInfinity;
 		public float MaxWinPercent { get { return _maxWinPercent; } }
+
+		private int _numPlays = 0;
+		public int NumPlays { get { return _numPlays; } }
 
 		private int _id = -1;
 		public int Id { get { return _id; } }
@@ -45,37 +50,6 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		{
 		}
 
-		public void RememberWinPercent()
-		{
-			float winPercent = WinPercent;
-
-			if (winPercent > _maxWinPercent)
-				_maxWinPercent = winPercent;
-
-			if (winPercent < _minWinPercent)
-				_minWinPercent = winPercent;
-
-			if(_averageWinPercent == 0.0f)
-				_averageWinPercent = winPercent;
-
-			//TODO: maybe rather weight with how many times played (and thus have a more accurate estimate), otherwise new
-			//individuals that have "luck" might kick out old / steady individuals:
-			else 
-				_averageWinPercent = TyUtility.Lerp(_averageWinPercent, winPercent, 0.5f);
-		}
-
-		public void AddStats(int matches, int wins)
-		{
-			_matches += matches;
-			_wins += wins;
-		}
-
-		public void ResetStats()
-		{
-			_matches = 0;
-			_wins = 0;
-		}
-
 		public static TyStateWeights GetMutatedWeights(TyStateWeights lhs, System.Random random, float deviation)
 		{
 			var weights = new TyStateWeights();
@@ -90,7 +64,9 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			return weights;
 		}
 
-		//returns random (in correlation to WinPercent) weight from either A or B 
+		/// <summary>
+		/// Chooses weighted (by fitness) random weights from either A or B
+		/// </summary>
 		public static TyStateWeights GetCrossedWeights(TyWeightsLearner lhs, TyWeightsLearner rhs, System.Random rand)
 		{
 			TyStateWeights newWeights = new TyStateWeights();
@@ -100,7 +76,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				var factorType = (TyStateWeights.WeightType)i;
 				float weight = rhs._weights.GetWeight(factorType);
 
-				float chanceLhs = lhs.WinPercent / (lhs.WinPercent + rhs.WinPercent);
+				float chanceLhs = lhs.Fitness / (lhs.Fitness + rhs.Fitness);
 
 				if (rand.RandFloat() < chanceLhs)
 					weight = lhs._weights.GetWeight(factorType);
@@ -110,5 +86,38 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			
 			return newWeights;
 		}
-    }
+
+		public void BeforeLearn()
+		{
+			_matches = 0;
+			_wins = 0;
+		}
+
+		public void AfterLearn(int matches, int wins)
+		{
+			_numPlays++;
+
+			_matches = matches;
+			_wins = wins;
+
+			float winPercent = CurWinPercent;
+
+			if (winPercent > _maxWinPercent)
+				_maxWinPercent = winPercent;
+
+			if (winPercent < _minWinPercent)
+				_minWinPercent = winPercent;
+
+			//TODO: maybe rather weight with how many times played (and thus have a more accurate estimate), otherwise new
+			//individuals that are "lucky" might kick out old but accurate/steady individuals
+
+			//0 -> never trust new values, 1 -> never trust old values
+			const float TRUST_VALUE = 0.33f;
+
+			if (_averageWinPercent == 0.0f)
+				_averageWinPercent = winPercent;
+			else
+				_averageWinPercent = TyUtility.Lerp(_averageWinPercent, winPercent, TRUST_VALUE);
+		}
+	}
 }

@@ -9,6 +9,8 @@ namespace SabberStoneCoreAi.Tyche.Learning
 {
     class TyLearnSetup
     {
+		/// <summary> Higher values make fitness more accurate. </summary>
+		private const int NUM_TRAININGS = 2;
 		private const float MIN_WEIGHT = 0.0f;
 		private const float MAX_WEIGHT = 10.0f;
 		
@@ -24,9 +26,11 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		private System.Random _random;
 
 		private List<TyWeightsLearner> _currentPopulation;
-
 		private List<string> _globalFileLog;
 		private int _individualId = 0;
+
+		private CsvLog _csvLog;
+		private CsvHelper _csvHelper;
 
 		public TyLearnSetup()
 		{
@@ -37,6 +41,10 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		{
 			_individualId = 0;
 			_globalFileLog = new List<string>();
+
+			_csvLog = new CsvLog();
+			_csvHelper = new CsvHelper();
+			_csvLog.AddCsvEntry(CsvHelper.GetCsvHeader());
 
 			_random = new Random();
 			_currentPopulation = new List<TyWeightsLearner>();
@@ -54,31 +62,24 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			var myDeckName = TyDeckHeroPair.GetDeckListPrint(myDeck);
 			var enemyDeckName = TyDeckHeroPair.GetDeckListPrint(enemyDeck);
 			FileName = myDeckName + "Vs" + enemyDeckName +"_"+ enemyAgents[0].GetType().Name;
+
+			while(File.Exists(FileName + ".txt"))
+				FileName += "0";
+
+			WriteGlobalToFile();
+
 			TyDebug.LogInfo(FileName);
 			TyDebug.LogInfo("Generations: " + numGenerations);
 
 			for (int step = 0; step < numGenerations; step++)
 			{
 				var startDate = DateTime.Now;
-
-				for (int learnerId = 0; learnerId < _currentPopulation.Count; learnerId++)
-				{
-					var curLearner = _currentPopulation[learnerId];
-					curLearner.ResetStats();
-					ComputeFitness(curLearner, myDeck, enemyDeck, enemyAgents);
+				
+				Train(_currentPopulation, myDeck, enemyDeck, enemyAgents);
 					
-				}
-
 				var children = GiveBirth(SelectFittest(_currentPopulation), _random, step + 1);
 
-				for (int childId = 0; childId < children.Count; childId++)
-				{
-					var childLearner = children[childId];
-					childLearner.Weights.Clamp(MIN_WEIGHT, MAX_WEIGHT);
-
-					childLearner.ResetStats();
-					ComputeFitness(childLearner, myDeck, enemyDeck, enemyAgents);
-				}
+				Train(children, myDeck, enemyDeck, enemyAgents);
 
 				_currentPopulation = MixPopulations(_currentPopulation, children);
 
@@ -86,7 +87,20 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				LogPopulation(_currentPopulation);
 				var diff = DateTime.Now.Subtract(startDate);
 				Log("Generation took " + diff.Minutes + " min, " + diff.Seconds + " s");
-				WriteCurrentToFile(FileName + "_" + step.ToString("0000") + ".txt");
+				WriteCurrentToFile(FileName + ".txt");
+				_csvLog.WriteToFiles(FileName);
+			}
+		}
+
+		private void Train(List<TyWeightsLearner> learners, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		{
+			for (int i = 0; i < learners.Count; i++)
+			{
+				var childLearner = learners[i];
+				childLearner.Weights.Clamp(MIN_WEIGHT, MAX_WEIGHT);
+
+				for (int j = 0; j < NUM_TRAININGS; j++)
+					ComputeFitness(childLearner, myDeck, enemyDeck, enemyAgents);
 			}
 		}
 
@@ -96,9 +110,33 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			{
 				var curLearner = _currentPopulation[i];
 
-				Log("Id: " + curLearner.Id + " (born: " + curLearner.GenerationBorn + ", winRate: " + curLearner.WinPercent + " (min: "+ curLearner.MinWinPercent + ", max: " + curLearner.MaxWinPercent + ", avg: " + curLearner.AverageWinPercent + "))");
+				CsvLog(curLearner);
+
+				Log("Id: " + curLearner.Id + " (born: " + curLearner.GenerationBorn + ", winRate: " + curLearner.CurWinPercent + " (min: "+ curLearner.MinWinPercent + ", max: " + curLearner.MaxWinPercent + ", avg: " + curLearner.AverageWinPercent + "))");
 				Log("Weights: " + curLearner.Weights.ToString());
 			}
+		}
+
+		private void CsvLog(TyWeightsLearner curLearner)
+		{	
+			_csvHelper.SetColumn(CsvHelper.Column.Id, curLearner.Id);
+			_csvHelper.SetColumn(CsvHelper.Column.Generation, curLearner.GenerationBorn);
+			_csvHelper.SetColumn(CsvHelper.Column.NumPlays, curLearner.NumPlays);
+			_csvHelper.SetColumn(CsvHelper.Column.Current, curLearner.CurWinPercent);
+			_csvHelper.SetColumn(CsvHelper.Column.Min, curLearner.MinWinPercent);
+			_csvHelper.SetColumn(CsvHelper.Column.Max, curLearner.MaxWinPercent);
+			_csvHelper.SetColumn(CsvHelper.Column.Average, curLearner.AverageWinPercent);
+
+			
+			for (int i = 0; i < (int)TyStateWeights.WeightType.Count; i++)
+			{
+				var curWeightType = (TyStateWeights.WeightType)i;
+				var obj = Enum.Parse(typeof(CsvHelper.Column), curWeightType.ToString());
+				var targetEnum = (CsvHelper.Column)obj;
+				_csvHelper.SetColumn(targetEnum, curLearner.Weights.GetWeight(curWeightType));
+			}
+
+			_csvLog.AddCsvEntry(_csvHelper.GetLine());
 		}
 
 		private void Log(string s)
@@ -134,7 +172,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private int FittestSort(TyWeightsLearner x, TyWeightsLearner y)
 		{
-			return y.WinPercent.CompareTo(x.WinPercent);
+			return y.Fitness.CompareTo(x.Fitness);
 		}
 
 		private List<TyWeightsLearner> GiveBirth(List<TyWeightsLearner> choosen, System.Random random, int generation)
@@ -179,15 +217,14 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private void ComputeFitness(TyWeightsLearner learner, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
 		{
-			TycheAgent myAgent = TycheAgent.GetLearning(learner.Weights);
+			learner.BeforeLearn();
 
-			var myAgentList = new List<AbstractAgent> { myAgent };
+			var myAgentList = new List<AbstractAgent> { TycheAgent.GetLearning(learner.Weights) };
 
 			TyMatchSetup training = new TyMatchSetup(myAgentList, enemyAgents, false);
 			training.RunRounds(myDeck, enemyDeck, Rounds, MatchesPerRound);
 
-			learner.AddStats(training.TotalPlays, training.Agent0Wins);
-			learner.RememberWinPercent();
+			learner.AfterLearn(training.TotalPlays, training.Agent0Wins);
 		}
     }
 }

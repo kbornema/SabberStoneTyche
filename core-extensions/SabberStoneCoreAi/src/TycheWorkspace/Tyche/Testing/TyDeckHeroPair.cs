@@ -7,7 +7,7 @@ using System.Text;
 
 namespace SabberStoneCoreAi.Tyche.Testing
 {
-    class DeckHeroPair
+    class TyDeckHeroPair
     {
 		private List<Card> _deck;
 		public List<Card> GetDeck() { return _deck; }
@@ -18,19 +18,19 @@ namespace SabberStoneCoreAi.Tyche.Testing
 		private CardClass _heroClass;
 		public CardClass GetHeroClass() { return _heroClass; }
 
-		public DeckHeroPair(List<Card> deck, CardClass heroClass)
+		public TyDeckHeroPair(List<Card> deck, CardClass heroClass)
 		{
 			_deck = deck;
 			_heroClass = heroClass;
 		}
 
-		public DeckHeroPair(List<Card> deck, CardClass heroClass, string name)
+		public TyDeckHeroPair(List<Card> deck, CardClass heroClass, string name)
 			: this(deck, heroClass)
 		{
 			_name = name;
 		}
 
-		public static string GetDeckListPrint(List<DeckHeroPair> decks)
+		public static string GetDeckListPrint(List<TyDeckHeroPair> decks)
 		{
 			string s = "";
 

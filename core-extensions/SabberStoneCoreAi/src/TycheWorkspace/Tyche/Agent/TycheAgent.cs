@@ -4,18 +4,14 @@ using System;
 using System.Collections.Generic;
 
 namespace SabberStoneCoreAi.Tyche
-{
-	/// <summary> An <see cref="AbstractAgent"/> that simulates each possible <see cref="PlayerTask"/> (only one step deep), and chooses the best <see cref="PlayerTask"/> according to <see cref="TyStateAnalyzer"/>, </summary>
+{	
 	class TycheAgent : AbstractAgent
 	{
+		private TyStateAnalyzer _analyzer;
 		private Random _random;
 
-		private TyStateAnalyzer _analyzer;
-		public TyStateAnalyzer Analyzer { get { return _analyzer; } }
-
-		private bool _hasInitialized;
-		private POGame.POGame _initialState;
 		private bool _heroBasedWeights;
+		private bool _hasInitialized;
 
 		public TycheAgent()
 			: this(TyStateWeights.GetDefault(), true)
@@ -57,8 +53,7 @@ namespace SabberStoneCoreAi.Tyche
 				{	
 					myState = TyState.FromSimulatedGame(poGame, poGame.CurrentPlayer);
 					enemyState = TyState.FromSimulatedGame(poGame, poGame.CurrentOpponent);
-					TyState.EstimateBuggySimulation(myState, enemyState, poGame, choosenOption);
-					//no need to swap states here (like below), since the swap did NOT already occur in the old poGame:
+					TyState.CorrectBuggySimulation(myState, enemyState, poGame, choosenOption);
 				}
 
 				else
@@ -66,7 +61,7 @@ namespace SabberStoneCoreAi.Tyche
 					myState = TyState.FromSimulatedGame(resultState, resultState.CurrentPlayer);
 					enemyState = TyState.FromSimulatedGame(resultState, resultState.CurrentOpponent);
 
-					//after END_TURN the players will be swapped for the sumlated resultState:
+					//after END_TURN the players will be swapped for the simlated resultState:
 					if (choosenOption.PlayerTaskType == PlayerTaskType.END_TURN)
 					{
 						TyState tmpState = myState;
@@ -101,7 +96,7 @@ namespace SabberStoneCoreAi.Tyche
 			}
 
 
-			//could not find a best state, either all of them are buggy or they are losing states:
+			//TODO: is this case relevant anymore after correcting buggy tasks?
 			if (bestTasks.Count == 0)
 			{
 				var tasksToChoose = new List<PlayerTask>(options);
@@ -120,22 +115,6 @@ namespace SabberStoneCoreAi.Tyche
 			return bestTasks.GetUniformRandom(_random);
 		}
 
-		private PlayerTask GetRandomTaskNonTurnEnd(POGame.POGame poGame, List<PlayerTask> options)
-		{
-			if (options.Count == 1)
-				return options[0];
-
-			int curId = _random.Next(options.Count);
-			PlayerTask curTask = options[curId];
-
-			if (curTask.PlayerTaskType == PlayerTaskType.END_TURN)
-				options.RemoveAt(curId);
-			else
-				return curTask;
-
-			return GetRandomTaskNonTurnEnd(poGame, options);
-		}
-
 		public override PlayerTask GetMove(POGame.POGame poGame)
 		{
 			if (!_hasInitialized)
@@ -144,14 +123,14 @@ namespace SabberStoneCoreAi.Tyche
 			return GetGreedyBestTask(poGame);
 		}
 
+		/// <summary> Called the first round (might be second round game wise) this agents is able to see the game and his opponent. </summary>
 		private void CustomInit(POGame.POGame initialState)
 		{
 			_hasInitialized = true;
-			_initialState = initialState;
 			_random = new Random();
 
 			if (_heroBasedWeights)
-				_analyzer.Weights = TyStateWeights.GetHeroBased(_initialState.CurrentPlayer.HeroClass, _initialState.CurrentOpponent.HeroClass);
+				_analyzer.Weights = TyStateWeights.GetHeroBased(initialState.CurrentPlayer.HeroClass, initialState.CurrentOpponent.HeroClass);
 		}
 
 		public override void InitializeGame()
@@ -172,6 +151,11 @@ namespace SabberStoneCoreAi.Tyche
 		public static TycheAgent GetCustom(TyStateWeights weights, bool changeWeights)
 		{
 			return new TycheAgent(weights, changeWeights);
+		}
+
+		public static TycheAgent GetCustom(bool changeWeights)
+		{
+			return GetCustom(TyStateWeights.GetDefault(), changeWeights);
 		}
 	}
 }

@@ -54,10 +54,15 @@ namespace SabberStoneCoreAi.Tyche
 
 		public override string ToString()
 		{
+			return ToCsvString(", ");
+		}
+
+		public string ToCsvString(string seperator)
+		{
 			string s = "";
 
 			for (int i = 0; i < _weights.Length; i++)
-				s += _weights[i].ToString(CultureInfo.InvariantCulture) + ", ";
+				s += _weights[i].ToString(CultureInfo.InvariantCulture) + seperator;
 
 			return s;
 		}
@@ -166,7 +171,23 @@ namespace SabberStoneCoreAi.Tyche
 
 		public static TyStateWeights GetHeroBased(CardClass myClass, CardClass enemyClass)
 		{
-			//TODO: 
+			if (myClass == CardClass.WARRIOR)
+			{
+				return new TyStateWeights(1.322651f, 4.013905f, 6.45684f, 6.764077f, 7.349644f);
+			}
+
+			else if (myClass == CardClass.SHAMAN)
+			{
+				return new TyStateWeights(6.003592f, 8.370952f, 3.456434f, 5.274337f, 2.222729f);
+			}
+
+			else if (myClass == CardClass.MAGE)
+			{
+				//1.154733f, 5.872955f, 7.000044f, 7.834682f, 10f,
+				return new TyStateWeights(0.26369f, 5.311966f, 1.190827f, 6.026119f, 3.145358f);
+			}
+
+			//TODO:
 			return GetDefault();
 		}
 	}

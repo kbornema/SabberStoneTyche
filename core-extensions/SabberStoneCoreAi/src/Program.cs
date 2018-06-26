@@ -29,41 +29,85 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.Random),
 														GetAgent(Agent.BotB) };
 
-			DebugTest();
+			//QuickTest();
+			//AllMirroredDecksAllAgents();
 
-			/*
+			
 			if (args.Length == 0)
 				DebugLearn();
 
 			else
 				LearnFromExe(args);
-				*/
+			
 		}
 
-		private static void DebugTest()
+		private static void QuickTest()
+		{
+			const int ROUNDS = 10;
+			const int MATCHES_PER_ROUND = 10;
+			TyDebug.LogInfo("Debug Test");
+			TyDebug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
+
+			bool[] change = { true, false };
+
+			for (int j = 0; j < change.Length; j++)
+			{
+				TyDebug.LogInfo("Change: " + change[j]);
+
+				for (int i = 0; i < 10; i++)
+				{
+					var deck = DeckFromEnum(DeckFu.Warrior);
+					var myAgent = TycheAgent.GetCustom(TyStateWeights.GetDefault(), change[j]);
+					var enemyAgent = GetAgent(Agent.BotB);
+
+					TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+					training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
+					training.PrintFinalResults();
+				}
+			}
+
+		
+
+			TyDebug.LogInfo("Press a key to close.");
+			Console.ReadLine();
+		}
+
+		private static void AllMirroredDecksAllAgents()
 		{
 			const int ROUNDS = 100;
 			const int MATCHES_PER_ROUND = 1;
 			TyDebug.LogInfo("Debug Test");
 			TyDebug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
 
-			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>> { DeckFromEnum(DeckFu.Mage), DeckFromEnum(DeckFu.Shaman), DeckFromEnum(DeckFu.Warrior) };
+			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>>
+			{
+				DeckFromEnum(DeckFu.Mage),
+				DeckFromEnum(DeckFu.Shaman),
+				DeckFromEnum(DeckFu.Warrior)
+			};
 
-			for (int i = 0; i < _allEnemyAgents.Count; i++)
+			bool[] change = { true, false };
+
+			for (int i = 0; i < _botBAgent.Count; i++)
 			{	
 				for (int j = 0; j < decks.Count; j++)
 				{
-					var deck = decks[j]; // RandMirrorDeck(); //DeckFromEnum(DeckFu.Warrior);
+					var deck = decks[j];
 					TyDebug.LogInfo(deck[0].Name);
 
-					for (int k = 0; k < 4; k++)
+					for (int k = 0; k < change.Length; k++)
 					{
-						var myAgent = new TycheAgent();
-						var enemyAgent = _allEnemyAgents[i % _allEnemyAgents.Count];
+						TyDebug.LogInfo("Change: " + change[k]);
 
-						TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
-						training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
-						training.PrintFinalResults();
+						for (int l = 0; l < 4; l++)
+						{
+							var myAgent = TycheAgent.GetCustom(change[k]);
+							var enemyAgent = _botBAgent[0];//_allEnemyAgents[i % _allEnemyAgents.Count];
+
+							TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+							training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
+							training.PrintFinalResults();
+						}
 					}
 				}
 			}
@@ -78,8 +122,8 @@ namespace SabberStoneCoreAi
 			List<AbstractAgent> enemies = _botBAgent;
 
 			TyLearnSetup learnSetup = new TyLearnSetup();
-			learnSetup.Rounds = 4;
-			learnSetup.MatchesPerRound = 5;
+			learnSetup.Rounds = 1;
+			learnSetup.MatchesPerRound = 1;
 
 			const int GENERATIONS = 20;
 
