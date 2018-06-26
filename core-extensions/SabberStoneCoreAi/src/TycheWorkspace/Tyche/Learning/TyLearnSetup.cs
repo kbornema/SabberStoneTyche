@@ -7,7 +7,7 @@ using System.Text;
 
 namespace SabberStoneCoreAi.Tyche.Learning
 {
-    class LearnSetup
+    class TyLearnSetup
     {
 		private const float MIN_WEIGHT = 0.0f;
 		private const float MAX_WEIGHT = 10.0f;
@@ -23,12 +23,12 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		private System.Random _random;
 
-		private List<ParamLearner> _currentPopulation;
+		private List<TyWeightsLearner> _currentPopulation;
 
 		private List<string> _globalFileLog;
 		private int _individualId = 0;
 
-		public LearnSetup()
+		public TyLearnSetup()
 		{
 			Clear();
 		}
@@ -39,23 +39,23 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			_globalFileLog = new List<string>();
 
 			_random = new Random();
-			_currentPopulation = new List<ParamLearner>();
+			_currentPopulation = new List<TyWeightsLearner>();
 
 			for (int i = 0; i < PopulationSize; i++)
 			{
-				var learner = new ParamLearner(_random, MIN_WEIGHT, MAX_WEIGHT, 0, _individualId);
+				var learner = new TyWeightsLearner(_random, MIN_WEIGHT, MAX_WEIGHT, 0, _individualId);
 				_individualId++;
 				_currentPopulation.Add(learner);
 			}
 		}
 
-		public void Run(int numGenerations, List<DeckHeroPair> myDeck, List<DeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		public void Run(int numGenerations, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
 		{
-			var myDeckName = DeckHeroPair.GetDeckListPrint(myDeck);
-			var enemyDeckName = DeckHeroPair.GetDeckListPrint(enemyDeck);
+			var myDeckName = TyDeckHeroPair.GetDeckListPrint(myDeck);
+			var enemyDeckName = TyDeckHeroPair.GetDeckListPrint(enemyDeck);
 			FileName = myDeckName + "Vs" + enemyDeckName +"_"+ enemyAgents[0].GetType().Name;
-			Debug.LogInfo(FileName);
-			Debug.LogInfo("Generations: " + numGenerations);
+			TyDebug.LogInfo(FileName);
+			TyDebug.LogInfo("Generations: " + numGenerations);
 
 			for (int step = 0; step < numGenerations; step++)
 			{
@@ -74,7 +74,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				for (int childId = 0; childId < children.Count; childId++)
 				{
 					var childLearner = children[childId];
-					childLearner.Parameter.Clamp(MIN_WEIGHT, MAX_WEIGHT);
+					childLearner.Weights.Clamp(MIN_WEIGHT, MAX_WEIGHT);
 
 					childLearner.ResetStats();
 					ComputeFitness(childLearner, myDeck, enemyDeck, enemyAgents);
@@ -90,21 +90,21 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			}
 		}
 
-		private void LogPopulation(List<ParamLearner> population)
+		private void LogPopulation(List<TyWeightsLearner> population)
 		{
 			for (int i = 0; i < _currentPopulation.Count; i++)
 			{
 				var curLearner = _currentPopulation[i];
 
 				Log("Id: " + curLearner.Id + " (born: " + curLearner.GenerationBorn + ", winRate: " + curLearner.WinPercent + " (min: "+ curLearner.MinWinPercent + ", max: " + curLearner.MaxWinPercent + ", avg: " + curLearner.AverageWinPercent + "))");
-				Log("Params: " + curLearner.Parameter.ToString());
+				Log("Weights: " + curLearner.Weights.ToString());
 			}
 		}
 
 		private void Log(string s)
 		{
 			_globalFileLog.Add(s);
-			Debug.LogInfo(s);
+			TyDebug.LogInfo(s);
 		}
 
 		public void WriteGlobalToFile()
@@ -117,14 +117,14 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			File.WriteAllLines(fileName, _globalFileLog);
 		}
 
-		private List<ParamLearner> MixPopulations(List<ParamLearner> oldPopulation, List<ParamLearner> offspring)
+		private List<TyWeightsLearner> MixPopulations(List<TyWeightsLearner> oldPopulation, List<TyWeightsLearner> offspring)
 		{
-			List<ParamLearner> tmpPopulation = new List<ParamLearner>();
+			List<TyWeightsLearner> tmpPopulation = new List<TyWeightsLearner>();
 			tmpPopulation.AddRange(oldPopulation);
 			tmpPopulation.AddRange(offspring);
 			tmpPopulation.Sort(FittestSort);
 
-			List<ParamLearner> newPopulaton = new List<ParamLearner>();
+			List<TyWeightsLearner> newPopulaton = new List<TyWeightsLearner>();
 
 			for (int i = 0; i < PopulationSize; i++)
 				newPopulaton.Add(tmpPopulation[i]);
@@ -132,18 +132,18 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			return newPopulaton;
 		}
 
-		private int FittestSort(ParamLearner x, ParamLearner y)
+		private int FittestSort(TyWeightsLearner x, TyWeightsLearner y)
 		{
 			return y.WinPercent.CompareTo(x.WinPercent);
 		}
 
-		private List<ParamLearner> GiveBirth(List<ParamLearner> choosen, System.Random random, int generation)
+		private List<TyWeightsLearner> GiveBirth(List<TyWeightsLearner> choosen, System.Random random, int generation)
 		{
-			List<ParamLearner> children = new List<ParamLearner>();
+			List<TyWeightsLearner> children = new List<TyWeightsLearner>();
 
 			for (int i = 0; i < OffspringSize; i++)
 			{
-				List<ParamLearner> parentsToChoose = new List<ParamLearner>(choosen);
+				List<TyWeightsLearner> parentsToChoose = new List<TyWeightsLearner>(choosen);
 
 				int firstId = random.Next(parentsToChoose.Count);
 				var first = parentsToChoose[firstId];
@@ -152,24 +152,24 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				int secondId = random.Next(parentsToChoose.Count);
 				var second = parentsToChoose[secondId];
 
-				var childParams = ParamLearner.GetCrossedParams(first, second, random);
-				childParams = ParamLearner.GetMutatedParams(childParams, random, MutationDeviation);
+				var childWeights = TyWeightsLearner.GetCrossedWeights(first, second, random);
+				childWeights = TyWeightsLearner.GetMutatedWeights(childWeights, random, MutationDeviation);
 
-				children.Add(new ParamLearner(childParams, generation, _individualId));
+				children.Add(new TyWeightsLearner(childWeights, generation, _individualId));
 				_individualId++;
 			}
 
 			return children;
 		}
 
-		private List<ParamLearner> SelectFittest(List<ParamLearner> learners)
+		private List<TyWeightsLearner> SelectFittest(List<TyWeightsLearner> learners)
 		{
-			List<ParamLearner> copyLearners = new List<ParamLearner>(learners);
+			List<TyWeightsLearner> copyLearners = new List<TyWeightsLearner>(learners);
 
 			//sort by fitness (aka win percent)
 			copyLearners.Sort(FittestSort);
 
-			List<ParamLearner> fittest = new List<ParamLearner>();
+			List<TyWeightsLearner> fittest = new List<TyWeightsLearner>();
 
 			for (int i = 0; i < MatingPoolSize; i++)
 				fittest.Add(copyLearners[i]);
@@ -177,14 +177,13 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			return fittest;
 		}
 
-		private void ComputeFitness(ParamLearner learner, List<DeckHeroPair> myDeck, List<DeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		private void ComputeFitness(TyWeightsLearner learner, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
 		{
-			TycheAgent myAgent = new TycheAgent();
-			myAgent.Analyzer.Parameter = learner.Parameter;
+			TycheAgent myAgent = TycheAgent.GetLearning(learner.Weights);
 
 			var myAgentList = new List<AbstractAgent> { myAgent };
 
-			MatchSetup training = new MatchSetup(myAgentList, enemyAgents, false);
+			TyMatchSetup training = new TyMatchSetup(myAgentList, enemyAgents, false);
 			training.RunRounds(myDeck, enemyDeck, Rounds, MatchesPerRound);
 
 			learner.AddStats(training.TotalPlays, training.Agent0Wins);

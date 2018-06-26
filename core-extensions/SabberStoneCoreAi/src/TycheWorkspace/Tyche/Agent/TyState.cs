@@ -1,14 +1,10 @@
 ﻿using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Tasks;
-using SabberStoneCoreAi.POGame;
-using SabberStoneCoreAi.Tyche.Testing;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SabberStoneCoreAi.Tyche
 {
-    class CustomState
+    class TyState
     {
 		private const float DIVINE_SHIELD_VALUE = 2.0f;
 
@@ -26,11 +22,11 @@ namespace SabberStoneCoreAi.Tyche
 
 		public float MinionValues;
 
-		private CustomState() { }
+		private TyState() { }
 
-		public static CustomState FromSimulatedGame(POGame.POGame newState, Controller me)
-		{
-			CustomState s = new CustomState
+		public static TyState FromSimulatedGame(POGame.POGame newState, Controller me)
+		{	
+			TyState s = new TyState
 			{
 				HeroHealth = me.Hero.Health,
 				TurnNumber = newState.Turn,
@@ -40,7 +36,6 @@ namespace SabberStoneCoreAi.Tyche
 				Fatigue = me.Hero.Fatigue,
 				HeroArmor = me.Hero.Armor,
 				MinionValues = ComputeMinionValues(newState, me)
-
 			};
 
 			if (me.Hero.Weapon != null)
@@ -56,26 +51,25 @@ namespace SabberStoneCoreAi.Tyche
 			return s;
 		}
 
-		public static void EstimateBuggySimulation(CustomState lastPlayerState, CustomState lastEnemyState, POGame.POGame lastState, PlayerTask task)
+		public static void EstimateBuggySimulation(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask task)
 		{	
 			var taskType = task.PlayerTaskType;
 
 			//nothing to do.. right!?
 			//TODO: maybe at END_TURN Hero loses the weapon and thus is buggy?
 			if (taskType == PlayerTaskType.END_TURN)
-				CorrectEndTurnTask(lastPlayerState, lastEnemyState, lastState, task);
+				return;
 
 			else if(taskType == PlayerTaskType.HERO_ATTACK)
 				CorrectHeroAttack(lastPlayerState, lastEnemyState, lastState, task);
 
-
 			else if(taskType == PlayerTaskType.PLAY_CARD)
 				CorrectPlayCard(lastPlayerState, lastEnemyState, lastState, task);
 
-			else
-			{
-				Debug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
-			}
+			//else
+			//{
+			//	Debug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
+			//}
 		}
 
 		private static float ComputeMinionValue(Minion minion)
@@ -124,12 +118,7 @@ namespace SabberStoneCoreAi.Tyche
 			return value;
 		}
 
-		private static void CorrectEndTurnTask(CustomState lastPlayerState, CustomState lastEnemyState, POGame.POGame lastState, PlayerTask task)
-		{
-			//TODO:?
-		}
-
-		private static void CorrectHeroAttack(CustomState lastPlayerState, CustomState lastEnemyState, POGame.POGame lastState, PlayerTask playerTask)
+		private static void CorrectHeroAttack(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask playerTask)
 		{
 			var target = playerTask.Target;
 			var attackingHero = lastState.CurrentPlayer.Hero;
@@ -175,7 +164,7 @@ namespace SabberStoneCoreAi.Tyche
 			}
 		}
 
-		private static void ComputeDamageToHero(CustomState targetHeroState, Hero targetHero, int damageToHero)
+		private static void ComputeDamageToHero(TyState targetHeroState, Hero targetHero, int damageToHero)
 		{
 			int armor = targetHero.Armor;
 			int dmgAfterArmor = Math.Max(0, damageToHero - armor);
@@ -184,7 +173,7 @@ namespace SabberStoneCoreAi.Tyche
 			targetHeroState.HeroHealth = Math.Max(0, targetHero.Health - dmgAfterArmor);
 		}
 
-		private static void CorrectPlayCard(CustomState lastPlayerState, CustomState lastEnemyState, POGame.POGame lastState, PlayerTask task)
+		private static void CorrectPlayCard(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask task)
 		{	
 			if(task.HasSource)
 			{

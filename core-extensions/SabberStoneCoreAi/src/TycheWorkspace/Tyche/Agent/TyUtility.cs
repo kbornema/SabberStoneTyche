@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace SabberStoneCoreAi.Tyche
 {
-    public static class Utility
-    {
-		
+    public static class TyUtility
+    {	
 		public static float Lerp(float a, float b, float t)
 		{
 			return (1.0f - t) * a + t * b;

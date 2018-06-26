@@ -1,29 +1,33 @@
 ﻿using SabberStoneCore.Tasks;
 using SabberStoneCoreAi.Agent;
-using SabberStoneCoreAi.POGame;
-using SabberStoneCoreAi.Tyche.Testing;
 using System;
 using System.Collections.Generic;
 
 namespace SabberStoneCoreAi.Tyche
 {
-	/// <summary> An <see cref="AbstractAgent"/> that simulates each possible <see cref="PlayerTask"/> (only one step deep), and chooses the best <see cref="PlayerTask"/> according to <see cref="StateAnalyzer"/>, </summary>
+	/// <summary> An <see cref="AbstractAgent"/> that simulates each possible <see cref="PlayerTask"/> (only one step deep), and chooses the best <see cref="PlayerTask"/> according to <see cref="TyStateAnalyzer"/>, </summary>
 	class TycheAgent : AbstractAgent
 	{
 		private Random _random;
 
-		private StateAnalyzer _analyzer;
-		public StateAnalyzer Analyzer { get { return _analyzer; } }
+		private TyStateAnalyzer _analyzer;
+		public TyStateAnalyzer Analyzer { get { return _analyzer; } }
 
 		private bool _hasInitialized;
 		private POGame.POGame _initialState;
+		private bool _heroBasedWeights;
 
 		public TycheAgent()
-		{
-			_analyzer = StateAnalyzer.GetDefault();
-			_random = new Random();
+			: this(TyStateWeights.GetDefault(), true)
+		{		
 		}
-		
+
+		private TycheAgent(TyStateWeights weights, bool heroBasedWeights)
+		{
+			_analyzer = new TyStateAnalyzer(weights);
+			_heroBasedWeights = heroBasedWeights;
+		}
+
 		private PlayerTask GetGreedyBestTask(POGame.POGame poGame)
 		{
 			var options = poGame.CurrentPlayer.Options();
@@ -44,28 +48,28 @@ namespace SabberStoneCoreAi.Tyche
 				var resultState = simulationResults[options[i]];
 				var choosenOption = options[i];
 
-				CustomState myState = null; 
-				CustomState enemyState  = null;
+				TyState myState = null; 
+				TyState enemyState  = null;
 
 				//it's a buggy state, mostly related to equipping/using weapons on heroes etc.
 				//in this case use the old state and estimate the new state manually:
 				if (resultState == null)
 				{	
-					myState = CustomState.FromSimulatedGame(poGame, poGame.CurrentPlayer);
-					enemyState = CustomState.FromSimulatedGame(poGame, poGame.CurrentOpponent);
-					CustomState.EstimateBuggySimulation(myState, enemyState, poGame, choosenOption);
+					myState = TyState.FromSimulatedGame(poGame, poGame.CurrentPlayer);
+					enemyState = TyState.FromSimulatedGame(poGame, poGame.CurrentOpponent);
+					TyState.EstimateBuggySimulation(myState, enemyState, poGame, choosenOption);
 					//no need to swap states here (like below), since the swap did NOT already occur in the old poGame:
 				}
 
 				else
 				{
-					myState = CustomState.FromSimulatedGame(resultState, resultState.CurrentPlayer);
-					enemyState = CustomState.FromSimulatedGame(resultState, resultState.CurrentOpponent);
+					myState = TyState.FromSimulatedGame(resultState, resultState.CurrentPlayer);
+					enemyState = TyState.FromSimulatedGame(resultState, resultState.CurrentOpponent);
 
 					//after END_TURN the players will be swapped for the sumlated resultState:
 					if (choosenOption.PlayerTaskType == PlayerTaskType.END_TURN)
 					{
-						CustomState tmpState = myState;
+						TyState tmpState = myState;
 						myState = enemyState;
 						enemyState = tmpState;
 					}
@@ -144,9 +148,10 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			_hasInitialized = true;
 			_initialState = initialState;
+			_random = new Random();
 
-			//TODO: find out who is playing against who and choose StateAnalyzer weights accordingly:
-			//e.g. warrior vs. warrior weights, mage vs mage weights etc.
+			if (_heroBasedWeights)
+				_analyzer.Weights = TyStateWeights.GetHeroBased(_initialState.CurrentPlayer.HeroClass, _initialState.CurrentOpponent.HeroClass);
 		}
 
 		public override void InitializeGame()
@@ -157,5 +162,16 @@ namespace SabberStoneCoreAi.Tyche
 		public override void InitializeAgent() { }
 		public override void FinalizeAgent() { }
 		public override void FinalizeGame() { }
+
+		/// <summary> Returns an agent that won't change its strategy based on the current game. Used for learning given weights. </summary>
+		public static TycheAgent GetLearning(TyStateWeights weights)
+		{
+			return GetCustom(weights, false);
+		}
+
+		public static TycheAgent GetCustom(TyStateWeights weights, bool changeWeights)
+		{
+			return new TycheAgent(weights, changeWeights);
+		}
 	}
 }

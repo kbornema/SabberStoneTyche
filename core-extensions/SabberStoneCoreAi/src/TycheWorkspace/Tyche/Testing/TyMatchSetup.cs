@@ -8,7 +8,7 @@ using System.Text;
 
 namespace SabberStoneCoreAi.Tyche.Testing
 {
-    class MatchSetup
+    class TyMatchSetup
     {
 		private bool _debug;
 
@@ -24,12 +24,12 @@ namespace SabberStoneCoreAi.Tyche.Testing
 		private int _agent1Wins;
 		public int Agent1Wins { get { return _agent1Wins; } }
 
-		public MatchSetup(AbstractAgent agent0, AbstractAgent agent1, bool debug)
+		public TyMatchSetup(AbstractAgent agent0, AbstractAgent agent1, bool debug)
 			: this(new List<AbstractAgent> { agent0 }, new List<AbstractAgent> { agent1 }, debug)
 		{
 		}
 
-		public MatchSetup(List<AbstractAgent> agent0, List<AbstractAgent> agent1, bool debug)
+		public TyMatchSetup(List<AbstractAgent> agent0, List<AbstractAgent> agent1, bool debug)
 		{
 			_agents0 = new List<AbstractAgent>(agent0);
 			_agents1 = new List<AbstractAgent>(agent1);
@@ -39,10 +39,10 @@ namespace SabberStoneCoreAi.Tyche.Testing
 		public void PrintFinalResults()
 		{
 			
-			Debug.LogInfo("Final results: " + _agents0.GetTypeNames() + ": " + ((float)_agent0Wins/(float)_totalPlays) * 100.0f + "% vs " + _agents1.GetTypeNames() + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%");
+			TyDebug.LogInfo("Final results: " + _agents0.GetTypeNames() + ": " + ((float)_agent0Wins/(float)_totalPlays) * 100.0f + "% vs " + _agents1.GetTypeNames() + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%");
 		}
 
-		public void RunRounds(List<DeckHeroPair> decks0, List<DeckHeroPair> decks1, int rounds, int matchesPerRound)
+		public void RunRounds(List<TyDeckHeroPair> decks0, List<TyDeckHeroPair> decks1, int rounds, int matchesPerRound)
 		{
 			System.Random random = new Random();
 
@@ -60,12 +60,12 @@ namespace SabberStoneCoreAi.Tyche.Testing
 			}
 		}
 
-		public void RunRounds(List<DeckHeroPair> decks, int rounds, int matchesPerRound)
+		public void RunRounds(List<TyDeckHeroPair> decks, int rounds, int matchesPerRound)
 		{
 			RunRounds(decks, decks, rounds, matchesPerRound);
 		}
 
-		private void RunMatches(AbstractAgent a0, AbstractAgent a1, DeckHeroPair p1Deck, DeckHeroPair p2Deck, int number, int startPlayer)
+		private void RunMatches(AbstractAgent a0, AbstractAgent a1, TyDeckHeroPair p1Deck, TyDeckHeroPair p2Deck, int number, int startPlayer)
 		{	 
 			//Debug.LogInfo(number + " matches for " + _agent0.GetType().Name + " (" + p1Deck.Name + ") vs. " + _agent1.GetType().Name + " (" + p2Deck.Name + ")");
 			//Debug.LogInfo("Player " + startPlayer + " starts");

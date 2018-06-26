@@ -29,43 +29,55 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.Random),
 														GetAgent(Agent.BotB) };
 
-			//DebugTest();
+			DebugTest();
 
+			/*
 			if (args.Length == 0)
 				DebugLearn();
 
 			else
 				LearnFromExe(args);
+				*/
 		}
 
 		private static void DebugTest()
 		{
 			const int ROUNDS = 100;
-			const int MATCHES_PER_ROUND = 10;
-			Debug.LogInfo("Debug Test");
-			Debug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
+			const int MATCHES_PER_ROUND = 1;
+			TyDebug.LogInfo("Debug Test");
+			TyDebug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
 
-			for (int i = 0; i < _allEnemyAgents.Count * 4; i++)
+			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>> { DeckFromEnum(DeckFu.Mage), DeckFromEnum(DeckFu.Shaman), DeckFromEnum(DeckFu.Warrior) };
+
+			for (int i = 0; i < _allEnemyAgents.Count; i++)
 			{	
-				var myAgent = new TycheAgent();
-				var enemyAgent = GetAgent(Agent.BotB); // _allEnemyAgents[i % _allEnemyAgents.Count];
+				for (int j = 0; j < decks.Count; j++)
+				{
+					var deck = decks[j]; // RandMirrorDeck(); //DeckFromEnum(DeckFu.Warrior);
+					TyDebug.LogInfo(deck[0].Name);
 
-				var deck = DeckFromEnum(DeckFu.Warrior); 
-				MatchSetup training = new MatchSetup(myAgent, enemyAgent, false);
-				training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
-				training.PrintFinalResults();
+					for (int k = 0; k < 4; k++)
+					{
+						var myAgent = new TycheAgent();
+						var enemyAgent = _allEnemyAgents[i % _allEnemyAgents.Count];
+
+						TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+						training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
+						training.PrintFinalResults();
+					}
+				}
 			}
 
-			Debug.LogInfo("Press a key to close.");
+			TyDebug.LogInfo("Press a key to close.");
 			Console.ReadLine();
 		}
 
 		private static void DebugLearn()
 		{
-			Debug.LogInfo("Debug Learn");
+			TyDebug.LogInfo("Debug Learn");
 			List<AbstractAgent> enemies = _botBAgent;
 
-			LearnSetup learnSetup = new LearnSetup();
+			TyLearnSetup learnSetup = new TyLearnSetup();
 			learnSetup.Rounds = 4;
 			learnSetup.MatchesPerRound = 5;
 
@@ -83,10 +95,10 @@ namespace SabberStoneCoreAi
 
 		private static void LearnFromExe(string[] args)
 		{
-			Debug.LogInfo("Executable Learn");
+			TyDebug.LogInfo("Executable Learn");
 			List<AbstractAgent> enemies = _botBAgent;
 
-			LearnSetup learnSetup = new LearnSetup();
+			TyLearnSetup learnSetup = new TyLearnSetup();
 
 			Dictionary<string, string> keyValues = new Dictionary<string, string>();
 			char[] split = { '=' };
@@ -98,7 +110,7 @@ namespace SabberStoneCoreAi
 				if (keyValuePair.Length == 2)
 					keyValues.Add(keyValuePair[0], keyValuePair[1]);
 				else
-					Debug.LogError("Arg '" + args[i] + "' is not allowed");
+					TyDebug.LogError("Arg '" + args[i] + "' is not allowed");
 			}
 
 
@@ -130,7 +142,7 @@ namespace SabberStoneCoreAi
 			return defaultValue;
 		}
 
-		private static List<DeckHeroPair> DeckFromEnumString(string fu)
+		private static List<TyDeckHeroPair> DeckFromEnumString(string fu)
 		{
 			for (int i = 0; i < (int)DeckFu.Count; i++)
 			{
@@ -143,30 +155,30 @@ namespace SabberStoneCoreAi
 			return null;
 		}
 
-		private static List<DeckHeroPair> DeckFromEnumInt(string fu)
+		private static List<TyDeckHeroPair> DeckFromEnumInt(string fu)
 		{
 			if (fu == ((int)DeckFu.All).ToString())
-				return ExamDecks.GetAll();
+				return TyExamDecks.GetAll();
 
 			else if (fu == ((int)DeckFu.Mage).ToString())
-				return ExamDecks.GetMageAsList();
+				return TyExamDecks.GetMageAsList();
 
 			else if (fu == ((int)DeckFu.Shaman).ToString())
-				return ExamDecks.GetShamanAsList();
+				return TyExamDecks.GetShamanAsList();
 
 			else if (fu == ((int)DeckFu.Warrior).ToString())
-				return ExamDecks.GetWarriorAsList();
+				return TyExamDecks.GetWarriorAsList();
 
 			return null;
 		}
 
-		private static List<DeckHeroPair> RandMirrorDeck()
+		private static List<TyDeckHeroPair> RandMirrorDeck()
 		{
 			List<DeckFu> decks = new List<DeckFu> { DeckFu.Mage, DeckFu.Shaman, DeckFu.Warrior };
 			return DeckFromEnum(decks.GetUniformRandom(_random));
 		}
 
-		private static List<DeckHeroPair> DeckFromEnum(DeckFu fu)
+		private static List<TyDeckHeroPair> DeckFromEnum(DeckFu fu)
 		{
 			return DeckFromEnumInt(((int)fu).ToString());
 		}
