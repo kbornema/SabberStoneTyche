@@ -5,6 +5,8 @@ using SabberStoneCoreAi.Tyche;
 using SabberStoneCoreAi.Tyche.Testing;
 using SabberStoneCoreAi.Tyche.Learning;
 using System.Collections.Generic;
+using SabberStoneCore.Model;
+using SabberStoneCoreAi.Meta;
 
 namespace SabberStoneCoreAi
 {
@@ -29,16 +31,13 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.Random),
 														GetAgent(Agent.BotB) };
 
-			//QuickTest();
+
+			QuickTest();
 			//AllMirroredDecksAllAgents();
-
-			
-			if (args.Length == 0)
-				DebugLearn();
-
-			else
-				LearnFromExe(args);
-			
+			//if (args.Length == 0)
+			//	DebugLearn();
+			//else
+			//	LearnFromExe(args);
 		}
 
 		private static void QuickTest()
@@ -57,7 +56,8 @@ namespace SabberStoneCoreAi
 				for (int i = 0; i < 10; i++)
 				{
 					var deck = DeckFromEnum(DeckFu.Warrior);
-					var myAgent = TycheAgent.GetCustom(TyStateWeights.GetDefault(), change[j]);
+
+					var myAgent = new TycheAgent();
 					var enemyAgent = GetAgent(Agent.BotB);
 
 					TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
@@ -86,29 +86,25 @@ namespace SabberStoneCoreAi
 				DeckFromEnum(DeckFu.Warrior)
 			};
 
-			bool[] change = { true, false };
 
-			for (int i = 0; i < _botBAgent.Count; i++)
-			{	
+			for (int i = 0; i < _allEnemyAgents.Count; i++)
+			{
 				for (int j = 0; j < decks.Count; j++)
 				{
 					var deck = decks[j];
 					TyDebug.LogInfo(deck[0].Name);
 
-					for (int k = 0; k < change.Length; k++)
+
+					for (int l = 0; l < 4; l++)
 					{
-						TyDebug.LogInfo("Change: " + change[k]);
+						var myAgent = TycheAgent.GetCustom(false);
+						var enemyAgent =_allEnemyAgents[i % _allEnemyAgents.Count];
 
-						for (int l = 0; l < 4; l++)
-						{
-							var myAgent = TycheAgent.GetCustom(change[k]);
-							var enemyAgent = _botBAgent[0];//_allEnemyAgents[i % _allEnemyAgents.Count];
-
-							TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
-							training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
-							training.PrintFinalResults();
-						}
+						TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+						training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
+						training.PrintFinalResults();
 					}
+
 				}
 			}
 

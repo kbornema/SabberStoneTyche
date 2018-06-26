@@ -165,7 +165,7 @@ namespace SabberStoneCoreAi.Tyche
 		public static TyStateWeights GetDefault()
 		{
 			TyStateWeights p = new TyStateWeights(1.0f);
-			p.SetWeight(TyStateWeights.WeightType.HealthFactor, 8.7f);
+			p.SetWeight(WeightType.HealthFactor, 8.7f);
 			return p;
 		}
 
@@ -180,7 +180,8 @@ namespace SabberStoneCoreAi.Tyche
 			else if (myClass == CardClass.SHAMAN)
 			{
 				//old: 6.003592f, 8.370952f, 3.456434f, 5.274337f, 2.222729f
-				return new TyStateWeights(0.7755456f, 0.9294491f, 7.154047f, 9.464943f, 5.366156f);
+				//new: 0.7755456f, 0.9294491f, 7.154047f, 9.464943f, 5.366156f
+				return new TyStateWeights(6.003592f, 8.370952f, 3.456434f, 5.274337f, 2.222729f);
 			}
 
 			else if (myClass == CardClass.MAGE)

@@ -55,6 +55,8 @@ namespace SabberStoneCoreAi.Tyche
 		{	
 			var taskType = task.PlayerTaskType;
 
+			Debug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
+
 			//nothing to do.. right!?
 			//TODO: maybe at END_TURN Hero loses the weapon and thus is buggy?
 			if (taskType == PlayerTaskType.END_TURN)
@@ -182,11 +184,20 @@ namespace SabberStoneCoreAi.Tyche
 				if(source is Minion)
 				{
 					var sourceMinion = (source as Minion);
-					//TODO: find out about the weapon that the player gets:
-					//TODO: two cases currently:
-					//- me gaining a weapon with my own card https://www.hearthpwn.com/cards/33132-nzoths-first-mate
-					// -destroying weapon of ENEMY with my own card: https://hearthstone.gamepedia.com/Acidic_Swamp_Ooze
-					//		- (only if i play mage and enemy has a weapon)
+
+					//card is https://www.hearthpwn.com/cards/33132-nzoths-first-mate
+					if (sourceMinion.Card.AssetId == 38914)
+					{
+						lastPlayerState.WeaponDamage = 1;
+						lastPlayerState.WeaponDurability = 3;
+					}
+
+					// https://hearthstone.gamepedia.com/Acidic_Swamp_Ooze
+					else if(sourceMinion.Card.AssetId == 906)
+					{
+						lastEnemyState.WeaponDurability = 0;
+						lastEnemyState.WeaponDamage = 0;
+					}
 				}
 
 				//player played a weapon to be equipped:
