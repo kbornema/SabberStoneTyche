@@ -112,7 +112,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 				CsvLog(curLearner);
 
-				Log("Id: " + curLearner.Id + " (born: " + curLearner.GenerationBorn + ", winRate: " + curLearner.CurWinPercent + " (min: "+ curLearner.MinWinPercent + ", max: " + curLearner.MaxWinPercent + ", avg: " + curLearner.AverageWinPercent + "))");
+				Log("Id: " + curLearner.Id + " (born: " + curLearner.GenerationBorn + ", cur: " + curLearner.CurWinPercent + " (avg: " + curLearner.AverageWinPercent + "))");
 				Log("Weights: " + curLearner.Weights.ToString());
 			}
 		}
@@ -123,10 +123,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			_csvHelper.SetColumn(CsvHelper.Column.Generation, curLearner.GenerationBorn);
 			_csvHelper.SetColumn(CsvHelper.Column.NumPlays, curLearner.NumPlays);
 			_csvHelper.SetColumn(CsvHelper.Column.Current, curLearner.CurWinPercent);
-			_csvHelper.SetColumn(CsvHelper.Column.Min, curLearner.MinWinPercent);
-			_csvHelper.SetColumn(CsvHelper.Column.Max, curLearner.MaxWinPercent);
 			_csvHelper.SetColumn(CsvHelper.Column.Average, curLearner.AverageWinPercent);
-
 			
 			for (int i = 0; i < (int)TyStateWeights.WeightType.Count; i++)
 			{

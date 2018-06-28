@@ -352,15 +352,7 @@ namespace SabberStoneCoreAi.Tyche
 				if (task.HasTarget && task.Target is Minion)
 				{
 					var targetMinion = task.Target as Minion;
-
-					// Keep old weapon durability:
-					// https://hearthstone.gamepedia.com/Runeforge_Haunter
-					if (targetMinion.Card.AssetId == 42819)
-					{
-						// Assumed that minion dies mostly if this occurs:
-						RemoveMinion(targetMinion, lastEnemyState, lastPlayerState, task);
-						corrected = true;
-					}
+					RemoveMinion(targetMinion, lastEnemyState, lastPlayerState, task);
 				}
 			}
 

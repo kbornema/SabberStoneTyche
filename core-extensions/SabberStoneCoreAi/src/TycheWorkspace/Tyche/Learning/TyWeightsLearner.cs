@@ -18,20 +18,15 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		private float _averageWinPercent = 0.0f;
 		public float AverageWinPercent { get { return _averageWinPercent; } }
 
-		private float _minWinPercent = Single.PositiveInfinity;
-		public float MinWinPercent { get { return _minWinPercent; } }
-
-		private float _maxWinPercent = Single.NegativeInfinity;
-		public float MaxWinPercent { get { return _maxWinPercent; } }
-
-		private int _numPlays = 0;
-		public int NumPlays { get { return _numPlays; } }
+		public int NumPlays { get { return _winPercentHistory.Count; } }
 
 		private int _id = -1;
 		public int Id { get { return _id; } }
 
 		private int _generationBorn = -1;
 		public int GenerationBorn { get { return _generationBorn; } }
+
+		private List<float> _winPercentHistory = new List<float>();
 
 		public TyWeightsLearner(TyStateWeights p, int generation, int id)
 		{
@@ -95,29 +90,23 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 		public void AfterLearn(int matches, int wins)
 		{
-			_numPlays++;
-
 			_matches = matches;
 			_wins = wins;
 
 			float winPercent = CurWinPercent;
 
-			if (winPercent > _maxWinPercent)
-				_maxWinPercent = winPercent;
+			_winPercentHistory.Add(winPercent);
+			_averageWinPercent = ComputeAverageValue();
+		}
 
-			if (winPercent < _minWinPercent)
-				_minWinPercent = winPercent;
+		private float ComputeAverageValue()
+		{
+			float total = 0.0f;
 
-			//TODO: maybe rather weight with how many times played (and thus have a more accurate estimate), otherwise new
-			//individuals that are "lucky" might kick out old but accurate/steady individuals
+			for (int i = 0; i < _winPercentHistory.Count; i++)
+				total += _winPercentHistory[i];
 
-			//0 -> never trust new values, 1 -> never trust old values
-			const float TRUST_VALUE = 0.33f;
-
-			if (_averageWinPercent == 0.0f)
-				_averageWinPercent = winPercent;
-			else
-				_averageWinPercent = TyUtility.Lerp(_averageWinPercent, winPercent, TRUST_VALUE);
+			return total /= _winPercentHistory.Count;
 		}
 	}
 }
