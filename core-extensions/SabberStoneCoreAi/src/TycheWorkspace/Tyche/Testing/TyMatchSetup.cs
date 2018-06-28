@@ -51,6 +51,7 @@ namespace SabberStoneCoreAi.Tyche.Testing
 				var deck0 = decks0.GetUniformRandom(random);
 				var deck1 = decks1.GetUniformRandom(random);
 
+
 				var player0 = _agents0.GetUniformRandom(random);
 				var player1 = _agents1.GetUniformRandom(random);
 

@@ -7,6 +7,7 @@ using SabberStoneCoreAi.Tyche.Learning;
 using System.Collections.Generic;
 using SabberStoneCore.Model;
 using SabberStoneCoreAi.Meta;
+using System.Text.RegularExpressions;
 
 namespace SabberStoneCoreAi
 {
@@ -31,40 +32,36 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.Random),
 														GetAgent(Agent.BotB) };
 
-
-			QuickTest();
+			//var c = Cards.FromName("Medivh, the Guardian");
+			//TyDebug.LogInfo(c.AssetId);	
+			//QuickTest();
 			//AllMirroredDecksAllAgents();
-			//if (args.Length == 0)
-			//	DebugLearn();
-			//else
-			//	LearnFromExe(args);
+			if (args.Length == 0)
+				DebugLearn();
+			else
+				LearnFromExe(args);
 		}
 
 		private static void QuickTest()
 		{
-			const int ROUNDS = 10;
-			const int MATCHES_PER_ROUND = 10;
+			const int ROUNDS = 1;
+			const int MATCHES_PER_ROUND = 1;
 			TyDebug.LogInfo("Debug Test");
 			TyDebug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
 
-			bool[] change = { true, false };
 
-			for (int j = 0; j < change.Length; j++)
+			for (int i = 0; i < 100; i++)
 			{
-				TyDebug.LogInfo("Change: " + change[j]);
+				var deck = DeckFromEnum(DeckFu.All);
 
-				for (int i = 0; i < 10; i++)
-				{
-					var deck = DeckFromEnum(DeckFu.Warrior);
+				var myAgent = new TycheAgent();
+				var enemyAgent = GetAgent(Agent.Random);
 
-					var myAgent = new TycheAgent();
-					var enemyAgent = GetAgent(Agent.BotB);
-
-					TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
-					training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
-					training.PrintFinalResults();
-				}
+				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+				training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
+				training.PrintFinalResults();
 			}
+			
 
 		
 
@@ -81,13 +78,18 @@ namespace SabberStoneCoreAi
 
 			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>>
 			{
+				DeckFromEnum(DeckFu.Druid),
 				DeckFromEnum(DeckFu.Mage),
+				DeckFromEnum(DeckFu.Paladin),
+				DeckFromEnum(DeckFu.Priest),
+				DeckFromEnum(DeckFu.Rogue),
 				DeckFromEnum(DeckFu.Shaman),
+				DeckFromEnum(DeckFu.Warlock),
 				DeckFromEnum(DeckFu.Warrior)
 			};
 
 
-			for (int i = 0; i < _allEnemyAgents.Count; i++)
+			//for (int i = 0; i < _allEnemyAgents.Count; i++)
 			{
 				for (int j = 0; j < decks.Count; j++)
 				{
@@ -97,8 +99,8 @@ namespace SabberStoneCoreAi
 
 					for (int l = 0; l < 4; l++)
 					{
-						var myAgent = TycheAgent.GetCustom(false);
-						var enemyAgent =_allEnemyAgents[i % _allEnemyAgents.Count];
+						var myAgent = new TycheAgent();
+						var enemyAgent = TycheAgent.GetCustom(false); //_allEnemyAgents[i % _allEnemyAgents.Count];
 
 						TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
 						training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
@@ -136,7 +138,7 @@ namespace SabberStoneCoreAi
 		private static void LearnFromExe(string[] args)
 		{
 			TyDebug.LogInfo("Executable Learn");
-			List<AbstractAgent> enemies = _botBAgent;
+			List<AbstractAgent> enemies = new List<AbstractAgent> { TycheAgent.GetCustom(false) };
 
 			TyLearnSetup learnSetup = new TyLearnSetup();
 
@@ -167,7 +169,6 @@ namespace SabberStoneCoreAi
 
 			learnSetup.Clear();
 			learnSetup.Run(generations, myDeck, hisDeck, enemies);
-
 		}
 
 		private static int TryGetIntValue(Dictionary<string, string> dict, string key, int defaultValue)
@@ -200,6 +201,12 @@ namespace SabberStoneCoreAi
 			if (fu == ((int)DeckFu.All).ToString())
 				return TyExamDecks.GetAll();
 
+			else if (fu == ((int)DeckFu.AllExam).ToString())
+				return TyExamDecks.GetAllExam();
+
+			else if (fu == ((int)DeckFu.AllOther).ToString())
+				return TyExamDecks.GetAllOther();
+
 			else if (fu == ((int)DeckFu.Mage).ToString())
 				return TyExamDecks.GetMageAsList();
 
@@ -208,6 +215,28 @@ namespace SabberStoneCoreAi
 
 			else if (fu == ((int)DeckFu.Warrior).ToString())
 				return TyExamDecks.GetWarriorAsList();
+
+			else if (fu == ((int)DeckFu.Druid).ToString())
+				return TyExamDecks.GetMurlocDruidAsList();
+
+			else if (fu == ((int)DeckFu.Warlock).ToString())
+				return TyExamDecks.GetZooDiscardWarlockAsList();
+
+			else if (fu == ((int)DeckFu.Priest).ToString())
+				return TyExamDecks.GetRenoKazakusDragonPriestAsList();
+
+			else if (fu == ((int)DeckFu.Rogue).ToString())
+				return TyExamDecks.GetMiraclePirateRogueAsList();
+
+			else if (fu == ((int)DeckFu.Paladin).ToString())
+				return TyExamDecks.GetMidrangeBuffPaladinAsList();
+			/*
+			Druid,
+			Warlock,
+			Priest,
+			Rogue,
+			Paladin,
+			 */
 
 			return null;
 		}
@@ -225,11 +254,22 @@ namespace SabberStoneCoreAi
 
 		enum DeckFu
 		{
-			None = 0,
-			Mage = 1,
-			Shaman = 2,
-			Warrior = 3,
-			All = 4,
+			None,
+
+			Mage,
+			Shaman,
+			Warrior,
+
+			Druid,
+			Warlock,
+			Priest,
+			Rogue,
+			Paladin,
+
+
+			AllExam,
+			AllOther,
+			All,
 
 			Count
 		}

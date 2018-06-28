@@ -142,7 +142,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		private void Log(string s)
 		{
 			_globalFileLog.Add(s);
-			TyDebug.LogInfo(s);
+			//TyDebug.LogInfo(s);
 		}
 
 		public void WriteGlobalToFile()

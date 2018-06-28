@@ -36,6 +36,7 @@ namespace SabberStoneCoreAi.Tyche
 
 			float bestStateValue = Single.NegativeInfinity;
 
+			float taskFactor = 1.0f;
 			List<PlayerTask> bestTasks = new List<PlayerTask>();
 			HashSet<PlayerTask> isLosingTask = new HashSet<PlayerTask>();
 
@@ -53,7 +54,10 @@ namespace SabberStoneCoreAi.Tyche
 				{	
 					myState = TyState.FromSimulatedGame(poGame, poGame.CurrentPlayer);
 					enemyState = TyState.FromSimulatedGame(poGame, poGame.CurrentOpponent);
-					TyState.CorrectBuggySimulation(myState, enemyState, poGame, choosenOption);
+
+					//if the correction failes, assume the task is 25% better/worse:
+					if (!TyState.CorrectBuggySimulation(myState, enemyState, poGame, choosenOption))
+						taskFactor = 1.25f;
 				}
 
 				else
@@ -70,7 +74,7 @@ namespace SabberStoneCoreAi.Tyche
 					}
 				}
 
-				float stateValue = _analyzer.GetStateValue(myState, enemyState);
+				float stateValue = _analyzer.GetStateValue(myState, enemyState) * taskFactor;
 				
 				//if the player wins, just choose this Task immediately:
 				if (Single.IsPositiveInfinity(stateValue))
