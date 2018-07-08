@@ -57,11 +57,11 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			}
 		}
 
-		public void Run(int numGenerations, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		public void Run(int numGenerations, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, AbstractAgent enemyAgent)
 		{
 			var myDeckName = TyDeckHeroPair.GetDeckListPrint(myDeck);
 			var enemyDeckName = TyDeckHeroPair.GetDeckListPrint(enemyDeck);
-			FileName = myDeckName + "Vs" + enemyDeckName +"_"+ enemyAgents[0].GetType().Name;
+			FileName = myDeckName + "Vs" + enemyDeckName +"_"+ enemyAgent.GetType().Name;
 
 			while(File.Exists(FileName + ".txt"))
 				FileName += "0";
@@ -75,11 +75,11 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			{
 				var startDate = DateTime.Now;
 				
-				Train(_currentPopulation, myDeck, enemyDeck, enemyAgents);
+				Train(_currentPopulation, myDeck, enemyDeck, enemyAgent);
 					
 				var children = GiveBirth(SelectFittest(_currentPopulation), _random, step + 1);
 
-				Train(children, myDeck, enemyDeck, enemyAgents);
+				Train(children, myDeck, enemyDeck, enemyAgent);
 
 				_currentPopulation = MixPopulations(_currentPopulation, children);
 
@@ -92,7 +92,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			}
 		}
 
-		private void Train(List<TyWeightsLearner> learners, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		private void Train(List<TyWeightsLearner> learners, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, AbstractAgent enemyAgent)
 		{
 			for (int i = 0; i < learners.Count; i++)
 			{
@@ -100,7 +100,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 				childLearner.Weights.Clamp(MIN_WEIGHT, MAX_WEIGHT);
 
 				for (int j = 0; j < NUM_TRAININGS; j++)
-					ComputeFitness(childLearner, myDeck, enemyDeck, enemyAgents);
+					ComputeFitness(childLearner, myDeck, enemyDeck, enemyAgent);
 			}
 		}
 
@@ -213,13 +213,11 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			return fittest;
 		}
 
-		private void ComputeFitness(TyWeightsLearner learner, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, List<AbstractAgent> enemyAgents)
+		private void ComputeFitness(TyWeightsLearner learner, List<TyDeckHeroPair> myDeck, List<TyDeckHeroPair> enemyDeck, AbstractAgent enemyAgent)
 		{
 			learner.BeforeLearn();
 
-			var myAgentList = new List<AbstractAgent> { TycheAgent.GetLearning(learner.Weights) };
-
-			TyMatchSetup training = new TyMatchSetup(myAgentList, enemyAgents, false);
+			TyMatchSetup training = new TyMatchSetup(TycheAgent.GetLearning(learner.Weights), enemyAgent);
 			training.RunRounds(myDeck, enemyDeck, Rounds, MatchesPerRound);
 
 			learner.AfterLearn(training.TotalPlays, training.Agent0Wins);

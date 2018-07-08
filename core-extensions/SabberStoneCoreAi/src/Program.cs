@@ -22,6 +22,8 @@ namespace SabberStoneCoreAi
 
 		private static void Main(string[] args)
 		{
+			
+
 			_randomLateAgent = new List<AbstractAgent> { GetAgent(Agent.RandomLate) };
 			_faceHunterAgent = new List<AbstractAgent> { GetAgent(Agent.FaceHunter) };
 			_randomAgent = new List<AbstractAgent> { GetAgent(Agent.Random) };
@@ -53,14 +55,14 @@ namespace SabberStoneCoreAi
 		{
 			const int ROUNDS = 100;
 			const int MATCHES_PER_ROUND = 1;
-			TyDebug.LogInfo("Debug Test");
-			TyDebug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
+			TyDebug.LogInfo("Quick Test Setup");
+			TyDebug.LogInfo("Total matches to play: " + (ROUNDS * MATCHES_PER_ROUND));
 
 			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>>
 			{
-				DeckFromEnum(DeckFu.Shaman),
+				DeckFromEnum(DeckFu.Mage),
 				DeckFromEnum(DeckFu.Warrior),
-				DeckFromEnum(DeckFu.Mage)
+				DeckFromEnum(DeckFu.Shaman)
 			};
 
 			for (int i = 0; i < decks.Count; i++)
@@ -69,12 +71,11 @@ namespace SabberStoneCoreAi
 				myAgent.UsedAlgorithm = TycheAgent.Algorithm.SearchTree;
 				//myAgent.PrintTurnTime = true;
 				//myAgent.TrackMatchTime = true;
-				
 
 				var enemyAgent = TycheAgent.GetCustom(false);
 				enemyAgent.UsedAlgorithm = TycheAgent.Algorithm.Greedy;
 
-				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
 				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
 				training.PrintFinalResults();
 			}
@@ -116,7 +117,7 @@ namespace SabberStoneCoreAi
 						var myAgent = new TycheAgent();
 						var enemyAgent = TycheAgent.GetCustom(false); //_allEnemyAgents[i % _allEnemyAgents.Count];
 
-						TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
+						TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
 						training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
 						training.PrintFinalResults();
 					}
@@ -131,7 +132,7 @@ namespace SabberStoneCoreAi
 		private static void DebugLearn()
 		{
 			TyDebug.LogInfo("Debug Learn");
-			List<AbstractAgent> enemies = _botBAgent;
+			var enemy = new BotB.BotB();
 
 			TyLearnSetup learnSetup = new TyLearnSetup();
 			learnSetup.Rounds = 1;
@@ -140,19 +141,21 @@ namespace SabberStoneCoreAi
 			const int GENERATIONS = 20;
 
 			learnSetup.Clear();
-			learnSetup.Run(GENERATIONS, DeckFromEnum(DeckFu.Mage), DeckFromEnum(DeckFu.Mage), enemies);
+			learnSetup.Run(GENERATIONS, DeckFromEnum(DeckFu.Mage), DeckFromEnum(DeckFu.Mage), enemy);
 
 			learnSetup.Clear();
-			learnSetup.Run(GENERATIONS, DeckFromEnum(DeckFu.Warrior), DeckFromEnum(DeckFu.Warrior), enemies);
+			learnSetup.Run(GENERATIONS, DeckFromEnum(DeckFu.Warrior), DeckFromEnum(DeckFu.Warrior), enemy);
 
 			learnSetup.Clear();
-			learnSetup.Run(GENERATIONS, DeckFromEnum(DeckFu.Shaman), DeckFromEnum(DeckFu.Shaman), enemies);
+			learnSetup.Run(GENERATIONS, DeckFromEnum(DeckFu.Shaman), DeckFromEnum(DeckFu.Shaman), enemy);
 		}
 
 		private static void LearnFromExe(string[] args)
 		{
 			TyDebug.LogInfo("Executable Learn");
-			List<AbstractAgent> enemies = new List<AbstractAgent> { TycheAgent.GetCustom(false) };
+
+			var enemy = TycheAgent.GetCustom(false);
+			enemy.UsedAlgorithm = TycheAgent.Algorithm.Greedy;
 
 			TyLearnSetup learnSetup = new TyLearnSetup();
 
@@ -182,7 +185,7 @@ namespace SabberStoneCoreAi
 			var hisDeck = DeckFromEnumString(deck1Value);
 
 			learnSetup.Clear();
-			learnSetup.Run(generations, myDeck, hisDeck, enemies);
+			learnSetup.Run(generations, myDeck, hisDeck, enemy);
 		}
 
 		private static int TryGetIntValue(Dictionary<string, string> dict, string key, int defaultValue)

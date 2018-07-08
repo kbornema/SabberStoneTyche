@@ -1,9 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SabberStoneCoreAi.Tyche
 {
     public static class TyUtility
-    {	
+    {
+		public static double GetSecondsSinceStart()
+		{
+			return (double)Environment.TickCount / 1000.0;
+		}
+
 		public static float Lerp(float a, float b, float t)
 		{
 			return (1.0f - t) * a + t * b;

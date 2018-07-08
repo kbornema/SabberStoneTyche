@@ -1,4 +1,5 @@
-﻿using SabberStoneCore.Tasks;
+﻿using SabberStoneCore.Model;
+using SabberStoneCore.Tasks;
 using SabberStoneCoreAi.Agent;
 using SabberStoneCoreAi.POGame;
 using System;
@@ -8,6 +9,9 @@ namespace SabberStoneCoreAi.Tyche
 {
 	class TycheAgent : AbstractAgent
 	{
+		//TODO:
+		public static List<Card> GetUserCreatedDeck() { return null; }
+
 		public enum Algorithm { Greedy, SearchTree }
 
 		private TyStateAnalyzer _analyzer;
@@ -18,14 +22,9 @@ namespace SabberStoneCoreAi.Tyche
 		private bool _hasInitialized;
 
 		private bool _heroBasedWeights;
-
-		private DateTime _matchTimeStart;
-
-		private DateTime _turnTimeStart;
-		public double TimeSinceTurnStart { get { return DateTime.Now.Subtract(_turnTimeStart).TotalSeconds; } }
+		private double _turnTimeStart;
 
 		public bool PrintTurnTime = false;
-		public bool TrackMatchTime = false;
 		public Algorithm UsedAlgorithm = Algorithm.SearchTree;
 
 		public TycheAgent()
@@ -35,9 +34,10 @@ namespace SabberStoneCoreAi.Tyche
 
 		private TycheAgent(TyStateWeights weights, bool heroBasedWeights)
 		{
-			_analyzer = new TyStateAnalyzer(weights);
 			_heroBasedWeights = heroBasedWeights;
+			_analyzer = new TyStateAnalyzer(weights);
 			_simTree = new TySimTree();
+			_random = new Random();
 		}
 
 		public override PlayerTask GetMove(POGame.POGame poGame)
@@ -107,7 +107,7 @@ namespace SabberStoneCoreAi.Tyche
 		/// <summary> False if there is not enough time left to do simulations. </summary>
 		private bool IsAllowedToSimulate()
 		{
-			double t = TimeSinceTurnStart;
+			double t = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
 
 			if (t >= TyConst.MAX_SIMULATION_TIME)
 			{
@@ -123,7 +123,7 @@ namespace SabberStoneCoreAi.Tyche
 		private void OnMyTurnBegin()
 		{
 			_isTurnBegin = false;
-			_turnTimeStart = DateTime.Now;
+			_turnTimeStart = TyUtility.GetSecondsSinceStart();
 		}
 
 		private void OnMyTurnEnd()
@@ -132,8 +132,8 @@ namespace SabberStoneCoreAi.Tyche
 
 			if (PrintTurnTime)
 			{
-				var diff = DateTime.Now.Subtract(_turnTimeStart);
-				TyDebug.LogInfo("Turn took: " + diff.TotalSeconds);
+				var diff = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
+				TyDebug.LogInfo("Turn took: " + diff + " seconds");
 			}
 		}
 
@@ -141,7 +141,6 @@ namespace SabberStoneCoreAi.Tyche
 		private void CustomInit(POGame.POGame initialState)
 		{
 			_hasInitialized = true;
-			_random = new Random();
 
 			if (_heroBasedWeights)
 				_analyzer.Weights = TyStateWeights.GetHeroBased(initialState.CurrentPlayer.HeroClass, initialState.CurrentOpponent.HeroClass);
@@ -150,18 +149,10 @@ namespace SabberStoneCoreAi.Tyche
 		public override void InitializeGame()
 		{
 			_hasInitialized = false;
-
-			if (TrackMatchTime)
-				_matchTimeStart = DateTime.Now;
 		}
 
 		public override void FinalizeGame()
 		{
-			if (TrackMatchTime)
-			{
-				var diff = DateTime.Now.Subtract(_matchTimeStart);
-				TyDebug.LogInfo("Match took: " + diff.TotalSeconds);
-			}
 		}
 
 		/// <summary> Returns an agent that won't change its strategy based on the current game. Used for learning given weights. </summary>

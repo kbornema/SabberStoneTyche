@@ -9,11 +9,9 @@ using System.Text;
 namespace SabberStoneCoreAi.Tyche.Testing
 {
     class TyMatchSetup
-    {
-		private bool _debug;
-
-		private List<AbstractAgent> _agents0;
-		private List<AbstractAgent> _agents1;
+    {	
+		private AbstractAgent _agent0;
+		private AbstractAgent _agent1;
 
 		private int _totalPlays;
 		public int TotalPlays { get { return _totalPlays; } }
@@ -24,41 +22,42 @@ namespace SabberStoneCoreAi.Tyche.Testing
 		private int _agent1Wins;
 		public int Agent1Wins { get { return _agent1Wins; } }
 
-		public TyMatchSetup(AbstractAgent agent0, AbstractAgent agent1, bool debug)
-			: this(new List<AbstractAgent> { agent0 }, new List<AbstractAgent> { agent1 }, debug)
-		{
-		}
+		private double _totalTimeUsed;
 
-		public TyMatchSetup(List<AbstractAgent> agent0, List<AbstractAgent> agent1, bool debug)
-		{
-			_agents0 = new List<AbstractAgent>(agent0);
-			_agents1 = new List<AbstractAgent>(agent1);
-			_debug = debug;
-		}
+		private bool _debug = false;
+		public bool PrintMatchTimes;
 
-		public void PrintFinalResults()
+
+		public TyMatchSetup(AbstractAgent agent0, AbstractAgent agent1)
 		{
-			
-			TyDebug.LogInfo("Final results: " + _agents0.GetTypeNames() + ": " + ((float)_agent0Wins/(float)_totalPlays) * 100.0f + "% vs " + _agents1.GetTypeNames() + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%");
+			this._agent0 = agent0;
+			this._agent1 = agent1;
 		}
 
 		public void RunRounds(List<TyDeckHeroPair> decks0, List<TyDeckHeroPair> decks1, int rounds, int matchesPerRound)
 		{
+			var totalStartTime = TyUtility.GetSecondsSinceStart();
+
 			System.Random random = new Random();
 
 			for (int i = 0; i < rounds; i++)
 			{
+				var roundStartTime = TyUtility.GetSecondsSinceStart();
+
 				var deck0 = decks0.GetUniformRandom(random);
 				var deck1 = decks1.GetUniformRandom(random);
 
-
-				var player0 = _agents0.GetUniformRandom(random);
-				var player1 = _agents1.GetUniformRandom(random);
-
 				var startPlayer = random.NextDouble() < 0.5 ? 1 : 2;
 
-				RunMatches(player0, player1, deck0, deck1, matchesPerRound, startPlayer);
+				RunMatches(deck0, deck1, matchesPerRound, startPlayer);
+
+				var roundTime = TyUtility.GetSecondsSinceStart() - roundStartTime;
+
+				if(PrintMatchTimes)
+					TyDebug.LogInfo(matchesPerRound + " matches took " + roundTime + " seconds. Total matches: " + _totalPlays);
 			}
+
+			_totalTimeUsed = TyUtility.GetSecondsSinceStart() - totalStartTime;
 		}
 
 		public void RunRounds(List<TyDeckHeroPair> decks, int rounds, int matchesPerRound)
@@ -66,11 +65,8 @@ namespace SabberStoneCoreAi.Tyche.Testing
 			RunRounds(decks, decks, rounds, matchesPerRound);
 		}
 
-		private void RunMatches(AbstractAgent a0, AbstractAgent a1, TyDeckHeroPair p1Deck, TyDeckHeroPair p2Deck, int number, int startPlayer)
-		{	 
-			//Debug.LogInfo(number + " matches for " + _agent0.GetType().Name + " (" + p1Deck.Name + ") vs. " + _agent1.GetType().Name + " (" + p2Deck.Name + ")");
-			//Debug.LogInfo("Player " + startPlayer + " starts");
-
+		private void RunMatches(TyDeckHeroPair p1Deck, TyDeckHeroPair p2Deck, int number, int startPlayer)
+		{		
 			GameConfig gameConfig = new GameConfig
 			{
 				StartPlayer = startPlayer,
@@ -85,7 +81,7 @@ namespace SabberStoneCoreAi.Tyche.Testing
 				Logging = false
 			};
 
-			var gameHandler = new POGameHandler(gameConfig, a0, a1, debug: _debug);
+			var gameHandler = new POGameHandler(gameConfig, _agent0, _agent1, debug: _debug);
 			gameHandler.PlayGames(number);
 
 			GameStats gameStats = gameHandler.getGameStats();
@@ -93,5 +89,10 @@ namespace SabberStoneCoreAi.Tyche.Testing
 			_agent0Wins += gameStats.PlayerA_Wins;
 			_agent1Wins += gameStats.PlayerB_Wins;
 		}
-    }
+
+		public void PrintFinalResults()
+		{
+			TyDebug.LogInfo("Final results: " + _agent0.GetType().Name + ": " + ((float)_agent0Wins / (float)_totalPlays) * 100.0f + "% vs " + _agent1.GetType().Name + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%. Took " + _totalTimeUsed + " seconds");
+		}
+	}
 }
