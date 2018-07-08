@@ -33,38 +33,52 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.BotB) };
 
 			//var c = Cards.FromName("Medivh, the Guardian");
-			//TyDebug.LogInfo(c.AssetId);	
-			//QuickTest();
+			//TyDebug.LogInfo(c.AssetId);
+
+
+			//var allCards = Cards.All;
+			//foreach(var card in allCards)
+			//	TyDebug.LogInfo(card.FullPrint());
+
+			QuickTest();
 			//AllMirroredDecksAllAgents();
-			if (args.Length == 0)
-				DebugLearn();
-			else
-				LearnFromExe(args);
+
+			//if (args.Length == 0)
+			//	DebugLearn();
+			//else
+			//	LearnFromExe(args);
 		}
 
 		private static void QuickTest()
 		{
-			const int ROUNDS = 1;
+			const int ROUNDS = 100;
 			const int MATCHES_PER_ROUND = 1;
 			TyDebug.LogInfo("Debug Test");
 			TyDebug.LogInfo("Total matches: " + (ROUNDS * MATCHES_PER_ROUND));
 
-
-			for (int i = 0; i < 100; i++)
+			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>>
 			{
-				var deck = DeckFromEnum(DeckFu.All);
+				DeckFromEnum(DeckFu.Shaman),
+				DeckFromEnum(DeckFu.Warrior),
+				DeckFromEnum(DeckFu.Mage)
+			};
 
-				var myAgent = new TycheAgent();
-				var enemyAgent = GetAgent(Agent.Random);
+			for (int i = 0; i < decks.Count; i++)
+			{
+				var myAgent = TycheAgent.GetCustom(false);
+				myAgent.UseTree = true;
+				//myAgent.PrintTurnTime = true;
+				//myAgent.TrackMatchTime = true;
+				
+
+				var enemyAgent = TycheAgent.GetCustom(false);
+				enemyAgent.UseTree = false;
 
 				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
-				training.RunRounds(deck, deck, ROUNDS, MATCHES_PER_ROUND);
+				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
 				training.PrintFinalResults();
 			}
 			
-
-		
-
 			TyDebug.LogInfo("Press a key to close.");
 			Console.ReadLine();
 		}

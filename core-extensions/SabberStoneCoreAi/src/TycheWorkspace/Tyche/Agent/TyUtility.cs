@@ -30,6 +30,14 @@ namespace SabberStoneCoreAi.Tyche
 			return list[random.Next(list.Count)];
 		}
 
+		public static T PopRandElement<T>(this List<T> list, System.Random random)
+		{
+			int id = random.Next(list.Count);
+			T element = list[id];
+			list.RemoveAt(id);
+			return element;
+		}
+
 		public static string GetTypeNames<T>(this List<T> list, string seperator = ", ")
 		{
 			string result = "";

@@ -26,8 +26,10 @@ namespace SabberStoneCoreAi.Tyche
 		}
 
 		public TyStateWeights(params float[] defaultValues)
-		: this()
+			: this()
 		{
+			System.Diagnostics.Debug.Assert(defaultValues.Length == (int)WeightType.Count);
+
 			for (int i = 0; i < _weights.Length; i++)
 				_weights[i] = defaultValues[i];
 		}

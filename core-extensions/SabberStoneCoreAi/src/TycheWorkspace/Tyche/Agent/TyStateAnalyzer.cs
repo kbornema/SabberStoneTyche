@@ -28,9 +28,7 @@ namespace SabberStoneCoreAi.Tyche
 			else if (HasLost(player))
 				return Single.NegativeInfinity;
 
-			float playerValue = GetStateValueFor(player, enemy);
-			float opponentValue = GetStateValueFor(enemy, player);
-			return playerValue - opponentValue;
+			return GetStateValueFor(player, enemy) - GetStateValueFor(enemy, player);
 		}
 
 		private float GetStateValueFor(TyState player, TyState enemy)
@@ -75,7 +73,7 @@ namespace SabberStoneCoreAi.Tyche
 			return (float)Math.Sqrt((double)numCards) - (float)state.Fatigue;
 		}
 
-		/// <summary> Gives points for having health. </summary>
+		/// <summary> Gives points for having health, treat armor as additional health. </summary>
 		private float GetHeroHealthArmorValue(TyState state)
 		{
 			return (float)Math.Sqrt((double)(state.HeroHealth + state.HeroArmor));

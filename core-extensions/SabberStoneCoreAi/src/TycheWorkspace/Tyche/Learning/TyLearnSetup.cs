@@ -167,6 +167,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			return newPopulaton;
 		}
 
+		/// <summary> Sort from biggest to smallest fitness </summary>
 		private int FittestSort(TyWeightsLearner x, TyWeightsLearner y)
 		{
 			return y.Fitness.CompareTo(x.Fitness);

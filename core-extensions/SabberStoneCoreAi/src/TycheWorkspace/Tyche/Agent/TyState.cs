@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace SabberStoneCoreAi.Tyche
 {
+	/// <summary> Holds information about the state of the game for a single agent. </summary>
 	class TyState
 	{
 		private const bool DEBUG_LOG = true;
@@ -28,7 +29,7 @@ namespace SabberStoneCoreAi.Tyche
 
 		public float MinionValues;
 
-		private TyState() { }
+		private TyState(){}
 
 		public static TyState FromSimulatedGame(POGame.POGame newState, Controller me)
 		{
@@ -87,7 +88,7 @@ namespace SabberStoneCoreAi.Tyche
 				CorrectHeroPower(lastPlayerState, lastEnemyState, lastState, task, ref corrected);
 			
 			if (DEBUG_LOG && !corrected)
-				Testing.TyDebug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
+				TyDebug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
 
 			return corrected;
 		}
@@ -242,8 +243,8 @@ namespace SabberStoneCoreAi.Tyche
 			{	
 				if (!CorrectForSummonAndEquip(minion.Card, ownerState, opponentState) && DEBUG_LOG)
 				{
-					Testing.TyDebug.LogError("Unknown deathrattle from " + minion.Card.FullPrint());
-					Testing.TyDebug.LogWarning("After task " + task.FullPrint());
+					TyDebug.LogError("Unknown deathrattle from " + minion.Card.FullPrint());
+					TyDebug.LogWarning("After task " + task.FullPrint());
 				}
 			}
 		}
@@ -399,7 +400,7 @@ namespace SabberStoneCoreAi.Tyche
 			}
 
 			if (DEBUG_LOG)
-				Testing.TyDebug.LogError("Could find number values in " + text);
+				TyDebug.LogError("Could find number values in " + text);
 
 			return false;
 		}

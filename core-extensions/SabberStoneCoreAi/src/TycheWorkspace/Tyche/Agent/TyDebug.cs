@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace SabberStoneCoreAi.Tyche.Testing
+namespace SabberStoneCoreAi.Tyche
 {
 	class TyDebug
 	{
