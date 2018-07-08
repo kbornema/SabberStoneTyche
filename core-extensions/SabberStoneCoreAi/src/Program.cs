@@ -65,14 +65,14 @@ namespace SabberStoneCoreAi
 
 			for (int i = 0; i < decks.Count; i++)
 			{
-				var myAgent = TycheAgent.GetCustom(false);
-				myAgent.UseTree = true;
+				var myAgent = TycheAgent.GetCustom(true);
+				myAgent.UsedAlgorithm = TycheAgent.Algorithm.SearchTree;
 				//myAgent.PrintTurnTime = true;
 				//myAgent.TrackMatchTime = true;
 				
 
 				var enemyAgent = TycheAgent.GetCustom(false);
-				enemyAgent.UseTree = false;
+				enemyAgent.UsedAlgorithm = TycheAgent.Algorithm.Greedy;
 
 				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent, false);
 				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
@@ -176,7 +176,7 @@ namespace SabberStoneCoreAi
 			var deck1Value = DeckFu.All.ToString();
 			keyValues.TryGetValue("deck1", out deck1Value);
 
-			int generations = TryGetIntValue(keyValues, "gens", 20); ;
+			int generations = TryGetIntValue(keyValues, "gens", 20);
 			
 			var myDeck = DeckFromEnumString(deck0Value);
 			var hisDeck = DeckFromEnumString(deck1Value);

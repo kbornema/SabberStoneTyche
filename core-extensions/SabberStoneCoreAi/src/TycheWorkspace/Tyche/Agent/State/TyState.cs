@@ -11,8 +11,6 @@ namespace SabberStoneCoreAi.Tyche
 	/// <summary> Holds information about the state of the game for a single agent. </summary>
 	class TyState
 	{
-		private const bool DEBUG_LOG = true;
-
 		private const float DIVINE_SHIELD_VALUE = 2.0f;
 
 		public int HeroHealth;
@@ -87,7 +85,7 @@ namespace SabberStoneCoreAi.Tyche
 			else if (taskType == PlayerTaskType.HERO_POWER)
 				CorrectHeroPower(lastPlayerState, lastEnemyState, lastState, task, ref corrected);
 			
-			if (DEBUG_LOG && !corrected)
+			if (TyConst.LOG_UNKNOWN_CORRECTIONS && !corrected)
 				TyDebug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
 
 			return corrected;
@@ -241,7 +239,7 @@ namespace SabberStoneCoreAi.Tyche
 
 			if (minion.HasDeathrattle)
 			{	
-				if (!CorrectForSummonAndEquip(minion.Card, ownerState, opponentState) && DEBUG_LOG)
+				if (!CorrectForSummonAndEquip(minion.Card, ownerState, opponentState) && TyConst.LOG_UNKNOWN_CORRECTIONS)
 				{
 					TyDebug.LogError("Unknown deathrattle from " + minion.Card.FullPrint());
 					TyDebug.LogWarning("After task " + task.FullPrint());
@@ -399,7 +397,7 @@ namespace SabberStoneCoreAi.Tyche
 				}
 			}
 
-			if (DEBUG_LOG)
+			if (TyConst.LOG_UNKNOWN_CORRECTIONS)
 				TyDebug.LogError("Could find number values in " + text);
 
 			return false;

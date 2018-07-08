@@ -7,7 +7,7 @@ namespace SabberStoneCoreAi.Tyche
 {
 	/// <summary> A unique node for a given PlayerTask. </summary>
     class TyTaskNode
-    {
+    {	
 		private TyStateAnalyzer _analyzer;
 
 		private PlayerTask _task;
@@ -19,54 +19,42 @@ namespace SabberStoneCoreAi.Tyche
 		private int _visits;
 		public int Visits { get { return _visits; } }
 
-		public TyTaskNode(TyStateAnalyzer analyzer, PlayerTask task, float totalValue)
+		private TySimTree _tree;
+
+		public TyTaskNode(TySimTree tree, TyStateAnalyzer analyzer, PlayerTask task, float totalValue)
 		{
+			_tree = tree;
 			_analyzer = analyzer;
 			_task = task;
 			_totalValue = totalValue;
 			_visits = 1;
 		}
 
-		public void Explore(TySimResult simResult, System.Random random, int maxDepth, ref DateTime turnStartTime)
+		public void Explore(TySimResult simResult, System.Random random)
 		{
-			Explore(simResult, random, 0, maxDepth, ref turnStartTime);
-		}
-
-		private void Explore(TySimResult simResult, System.Random random, int depth, int maxDepth, ref DateTime turnStartTime)
-		{
-			bool stop = false;
-
-			if (depth >= maxDepth)
-			{
-				stop = true;
-			}
-
-			if (simResult.state == null)
-			{
-				stop = true;
-			}
-
-			var timeSinceTurnStart = DateTime.Now.Subtract(turnStartTime);
-
-			if (timeSinceTurnStart.TotalSeconds >= TySimTree.MAX_SIMULATION_TIME)
-			{
-				stop = true;
-			}
-
-			if(stop)
+			if (simResult.IsBuggy)
 			{
 				AddValue(simResult.value);
 				return;
 			}
-			
+
+			if (_tree.TimeSinceEpisodeStart >= TyConst.MAX_EPISODE_TIME)
+			{
+				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
+					TyDebug.LogWarning("Stopped episode after exceeding " + TyConst.MAX_EPISODE_TIME + " seconds");
+
+				AddValue(simResult.value);
+				return;
+			}
+
 			var game = simResult.state;
 			var options = game.CurrentPlayer.Options();
 			var task = options.GetUniformRandom(random);
 			var childState = TyStateUtility.GetSimulatedGame(game, task, _analyzer);
 
 			if (childState.task.PlayerTaskType != PlayerTaskType.END_TURN)
-				Explore(childState, random, depth + 1, maxDepth, ref turnStartTime);
-			
+				Explore(childState, random);
+
 			else
 				AddValue(simResult.value);
 		}
@@ -81,6 +69,5 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			return _totalValue / _visits;
 		}
-
 	}
 }

@@ -19,8 +19,8 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		public int MatingPoolSize = 4;
 		public int OffspringSize = 4;
 
-		public int Rounds = 10;
-		public int MatchesPerRound = 5;
+		public int Rounds = 100;
+		public int MatchesPerRound = 1;
 		public string FileName = "result";
 
 		private System.Random _random;

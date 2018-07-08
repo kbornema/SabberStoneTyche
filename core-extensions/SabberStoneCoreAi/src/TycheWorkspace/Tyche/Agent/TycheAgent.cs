@@ -1,12 +1,17 @@
 ﻿using SabberStoneCore.Tasks;
 using SabberStoneCoreAi.Agent;
+using SabberStoneCoreAi.POGame;
 using System;
+using System.Collections.Generic;
 
 namespace SabberStoneCoreAi.Tyche
 {
 	class TycheAgent : AbstractAgent
-	{	
+	{
+		public enum Algorithm { Greedy, SearchTree }
+
 		private TyStateAnalyzer _analyzer;
+		private TySimTree _simTree;
 		private Random _random;
 
 		private bool _isTurnBegin = true;
@@ -14,11 +19,14 @@ namespace SabberStoneCoreAi.Tyche
 
 		private bool _heroBasedWeights;
 
+		private DateTime _matchTimeStart;
+
+		private DateTime _turnTimeStart;
+		public double TimeSinceTurnStart { get { return DateTime.Now.Subtract(_turnTimeStart).TotalSeconds; } }
+
 		public bool PrintTurnTime = false;
 		public bool TrackMatchTime = false;
-
-		private DateTime _matchTimeStart;
-		private DateTime _turnTimeStart;
+		public Algorithm UsedAlgorithm = Algorithm.SearchTree;
 
 		public TycheAgent()
 			: this(TyStateWeights.GetDefault(), true)
@@ -29,9 +37,8 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			_analyzer = new TyStateAnalyzer(weights);
 			_heroBasedWeights = heroBasedWeights;
+			_simTree = new TySimTree();
 		}
-
-		public bool UseTree = false;
 
 		public override PlayerTask GetMove(POGame.POGame poGame)
 		{
@@ -41,48 +48,11 @@ namespace SabberStoneCoreAi.Tyche
 			if (_isTurnBegin)
 				OnMyTurnBegin();
 
-			PlayerTask choosenTask = null;
-
 			var options = poGame.CurrentPlayer.Options();
 
-			//if(PrintTurnTime)
-			//{
-			//	TyDebug.LogInfo("Options: " + options.Count);
+			PlayerTask choosenTask = ChooseTask(poGame, options);
 
-			//	if(options.Count > 20)
-			//	{
-			//		for (int i = 0; i < options.Count; i++)
-			//		{
-			//			TyDebug.LogWarning(options[i].FullPrint());
-			//		}
-			//	}
-			//}
-
-
-			if (options.Count == 1)
-				choosenTask = options[0];
-
-			else
-			{
-				if (UseTree)
-				{
-					TySimTree t = new TySimTree(poGame, _analyzer, options);
-
-					int numEpisodes = (int)((options.Count * options.Count) / 2);
-
-					for (int i = 0; i < numEpisodes; i++)
-						t.SimulateEpisode(_random, 999999, ref _turnTimeStart);
-
-					choosenTask = t.GetBestNode();
-				}
-
-				else
-				{
-					var bestTasks = TyStateUtility.GetSimulatedBestTasks(1, poGame, options, _analyzer);
-					choosenTask = bestTasks[0].task;
-				}
-			}
-
+			//should not happen, but if, just return anything:
 			if (choosenTask == null)
 				choosenTask = options.GetUniformRandom(_random);
 
@@ -91,7 +61,65 @@ namespace SabberStoneCoreAi.Tyche
 
 			return choosenTask;
 		}
-		
+
+		private PlayerTask ChooseTask(POGame.POGame poGame, List<PlayerTask> options)
+		{
+			if (options.Count == 1)
+				return options[0];
+
+			else if (UsedAlgorithm == Algorithm.SearchTree)
+				return GetSimulationTreeTask(poGame, options);
+
+			else if(UsedAlgorithm == Algorithm.Greedy)
+				return GetGreedyBestTask(poGame, options);
+
+			else
+				return null;
+		}
+
+		private PlayerTask GetSimulationTreeTask(POGame.POGame poGame, List<PlayerTask> options)
+		{
+			if (!IsAllowedToSimulate())
+				return GetGreedyBestTask(poGame, options);
+
+			_simTree.InitTree(_analyzer, poGame, options);
+
+			//-1 because TurnEnd won't be looked at:
+			int numEpisodes = (int)((options.Count - 1) * 100);
+
+			for (int i = 0; i < numEpisodes; i++)
+			{
+				if (!IsAllowedToSimulate())
+					break;
+
+				_simTree.SimulateEpisode(_random, i, numEpisodes);
+			}
+
+			return _simTree.GetBestTask();
+		}
+
+		private PlayerTask GetGreedyBestTask(POGame.POGame poGame, List<PlayerTask> options)
+		{
+			var bestTasks = TyStateUtility.GetSimulatedBestTasks(1, poGame, options, _analyzer);
+			return bestTasks[0].task;
+		}
+
+		/// <summary> False if there is not enough time left to do simulations. </summary>
+		private bool IsAllowedToSimulate()
+		{
+			double t = TimeSinceTurnStart;
+
+			if (t >= TyConst.MAX_SIMULATION_TIME)
+			{
+				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
+					TyDebug.LogWarning("Stopped simulations after " + t + " seconds");
+
+				return false;
+			}
+
+			return true;
+		}
+
 		private void OnMyTurnBegin()
 		{
 			_isTurnBegin = false;
@@ -136,9 +164,6 @@ namespace SabberStoneCoreAi.Tyche
 			}
 		}
 
-		public override void InitializeAgent() { }
-		public override void FinalizeAgent() { }
-
 		/// <summary> Returns an agent that won't change its strategy based on the current game. Used for learning given weights. </summary>
 		public static TycheAgent GetLearning(TyStateWeights weights)
 		{
@@ -155,5 +180,8 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			return GetCustom(TyStateWeights.GetDefault(), changeWeights);
 		}
+
+		public override void InitializeAgent() { }
+		public override void FinalizeAgent() { }
 	}
 }
