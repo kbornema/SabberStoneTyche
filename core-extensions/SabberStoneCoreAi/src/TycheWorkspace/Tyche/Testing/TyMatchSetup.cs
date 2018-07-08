@@ -92,7 +92,7 @@ namespace SabberStoneCoreAi.Tyche.Testing
 
 		public void PrintFinalResults()
 		{
-			TyDebug.LogInfo("Final results: " + _agent0.GetType().Name + ": " + ((float)_agent0Wins / (float)_totalPlays) * 100.0f + "% vs " + _agent1.GetType().Name + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%. Took " + _totalTimeUsed + " seconds");
+			TyDebug.LogInfo("Final results: " + _agent0.GetType().Name + ": " + ((float)_agent0Wins / (float)_totalPlays) * 100.0f + "% vs " + _agent1.GetType().Name + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%. Took " + _totalTimeUsed.ToString("0.000") + "s");
 		}
 	}
 }

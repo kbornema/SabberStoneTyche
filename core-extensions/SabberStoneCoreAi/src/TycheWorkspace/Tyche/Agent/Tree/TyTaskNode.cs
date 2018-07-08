@@ -27,7 +27,7 @@ namespace SabberStoneCoreAi.Tyche
 			_analyzer = analyzer;
 			_task = task;
 			_totalValue = totalValue;
-			_visits = 1;
+			_visits = 0;
 		}
 
 		public void Explore(TySimResult simResult, System.Random random)
@@ -59,7 +59,7 @@ namespace SabberStoneCoreAi.Tyche
 				AddValue(simResult.value);
 		}
 
-		private void AddValue(float value)
+		public void AddValue(float value)
 		{
 			_totalValue += value;
 			_visits++;

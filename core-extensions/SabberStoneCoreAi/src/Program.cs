@@ -67,8 +67,8 @@ namespace SabberStoneCoreAi
 
 			for (int i = 0; i < decks.Count; i++)
 			{
-				var myAgent = TycheAgent.GetCustom(true);
-				myAgent.UsedAlgorithm = TycheAgent.Algorithm.SearchTree;
+				var myAgent = new TycheAgent();
+				//myAgent.PrintTurnTime = true;
 				//myAgent.PrintTurnTime = true;
 				//myAgent.TrackMatchTime = true;
 

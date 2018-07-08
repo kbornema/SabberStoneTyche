@@ -112,7 +112,7 @@ namespace SabberStoneCoreAi.Tyche
 			if (t >= TyConst.MAX_SIMULATION_TIME)
 			{
 				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
-					TyDebug.LogWarning("Stopped simulations after " + t + " seconds");
+					TyDebug.LogWarning("Stopped simulations after " + t.ToString("0.000") + "s");
 
 				return false;
 			}
@@ -133,7 +133,7 @@ namespace SabberStoneCoreAi.Tyche
 			if (PrintTurnTime)
 			{
 				var diff = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
-				TyDebug.LogInfo("Turn took: " + diff + " seconds");
+				TyDebug.LogInfo("Turn took " + diff.ToString("0.000") + "s");
 			}
 		}
 

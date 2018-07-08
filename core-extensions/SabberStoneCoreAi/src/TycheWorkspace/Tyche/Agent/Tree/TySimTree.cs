@@ -25,16 +25,21 @@ namespace SabberStoneCoreAi.Tyche
 			_analyzer = analyzer;
 			_rootGame = root;
 
-			var initialResults = TyStateUtility.GetSimulatedGames(root, options, _analyzer);
+			//var initialResults = TyStateUtility.GetSimulatedGames(root, options, _analyzer);
 
-			for (int i = 0; i < initialResults.Count; i++)
+			for (int i = 0; i < options.Count; i++)
 			{
-				var tmpResult = initialResults[i];
-				var task = tmpResult.task;
+				var task = options[i];
 
-				var node = new TyTaskNode(this, _analyzer, task, tmpResult.value);
+				var node = new TyTaskNode(this, _analyzer, task, 0.0f);
 
-				if (task.PlayerTaskType != PlayerTaskType.END_TURN)
+				//end turn is pretty straight forward, should not really be looked at later in the simulations, just simulate once and keep the value:
+				if (task.PlayerTaskType == PlayerTaskType.END_TURN)
+				{
+					var sim = TyStateUtility.GetSimulatedGame(root, task, _analyzer);
+					node.AddValue(sim.value);
+				}
+				else
 					_explorableNodes.Add(node);
 
 				_nodesToEstimate.Add(task, node);
