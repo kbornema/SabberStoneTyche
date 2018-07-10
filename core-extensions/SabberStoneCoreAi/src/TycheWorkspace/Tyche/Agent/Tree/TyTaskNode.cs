@@ -13,6 +13,9 @@ namespace SabberStoneCoreAi.Tyche
 		private PlayerTask _task;
 		public PlayerTask Task { get { return _task; } }
 
+		//TODO: maybe seperate EndTurnValues and BuggyValues:
+		//aswell as visits and buggyVisits
+
 		private float _totalValue;
 		public float TotalValue { get { return _totalValue; } }
 
@@ -34,15 +37,6 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			if (simResult.IsBuggy)
 			{
-				AddValue(simResult.value);
-				return;
-			}
-
-			if (_tree.TimeSinceEpisodeStart >= TyConst.MAX_EPISODE_TIME)
-			{
-				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
-					TyDebug.LogWarning("Stopped episode after exceeding " + TyConst.MAX_EPISODE_TIME + " seconds");
-
 				AddValue(simResult.value);
 				return;
 			}

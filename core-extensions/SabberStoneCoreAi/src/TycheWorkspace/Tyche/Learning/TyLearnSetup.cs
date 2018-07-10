@@ -217,7 +217,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		{
 			learner.BeforeLearn();
 
-			TyMatchSetup training = new TyMatchSetup(TycheAgent.GetLearning(learner.Weights), enemyAgent);
+			TyMatchSetup training = new TyMatchSetup(TycheAgent.GetLearningAgent(learner.Weights), enemyAgent);
 			training.RunRounds(myDeck, enemyDeck, Rounds, MatchesPerRound);
 
 			learner.AfterLearn(training.TotalPlays, training.Agent0Wins);

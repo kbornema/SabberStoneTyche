@@ -26,7 +26,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 		{
 			//makes it an os-friendly fileName (with the correct / or \ depening on the platform), also makes it unique by adding file endings like (00, 01)
 			fileName = fileName.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
-
+			TyDebug.LogInfo("Wrote " + fileName);
 			CreatePathIfNonExistent(fileName);
 			WriteCsvFile(fileName, _csvLogs);
 		}

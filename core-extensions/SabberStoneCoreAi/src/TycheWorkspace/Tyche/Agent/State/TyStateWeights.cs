@@ -174,12 +174,8 @@ namespace SabberStoneCoreAi.Tyche
 		public static TyStateWeights GetHeroBased(CardClass myClass, CardClass enemyClass)
 		{
 			if (myClass == CardClass.WARRIOR)
-			{
-				//0		0	18		0,5		0,44	0,76	0,56179		9,51431		0,1627777	6,475825	8,087195	8,496023
-				//14	2	16		0,52	0,5		0,8		0,564923	2,453197	6,553556	9,408744	1,562617	5,105491
-				//10	1	20		0,64	0,46	0,7		0,6056554	0,7126011	1,34442		9,597446	5,204967	6,469732
-				//11	1	20		0,76	0,44	0,78	0,6375787	3.950553f	8.117403f	8.071126f	0.9813914f	8.2482f
-				return new TyStateWeights(3.950553f, 8.117403f, 8.071126f, 0.9813914f, 8.2482f);
+			{	
+				return new TyStateWeights(3.283574f, 7.592678f, 6.853167f, 4.785677f, 3.926729f);
 			}
 
 			else if (myClass == CardClass.SHAMAN)
@@ -191,8 +187,7 @@ namespace SabberStoneCoreAi.Tyche
 
 			else if (myClass == CardClass.MAGE)
 			{
-				//TODO: checked, but worse
-				return GetDefault();
+				return new TyStateWeights(3.973221f, 9.552423f, 9.033211f, 2.2092f, 1.850587f);
 			}
 
 			else if(myClass == CardClass.DRUID)

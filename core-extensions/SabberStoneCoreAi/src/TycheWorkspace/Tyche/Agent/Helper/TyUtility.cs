@@ -36,6 +36,11 @@ namespace SabberStoneCoreAi.Tyche
 			return list[random.Next(list.Count)];
 		}
 
+		public static T GetUniformRandom<T>(this List<T> list, System.Random random, int count)
+		{
+			return list[random.Next(count)];
+		}
+
 		public static T PopRandElement<T>(this List<T> list, System.Random random)
 		{
 			int id = random.Next(list.Count);

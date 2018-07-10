@@ -13,12 +13,11 @@ namespace SabberStoneCoreAi.Tyche
 
 		private Dictionary<PlayerTask, TyTaskNode> _nodesToEstimate = new Dictionary<PlayerTask, TyTaskNode>();
 		private List<TyTaskNode> _explorableNodes = new List<TyTaskNode>();
-
-		private double _episodeStart;
-		public double TimeSinceEpisodeStart { get { return TyUtility.GetSecondsSinceStart() - _episodeStart; } }
+		private List<TyTaskNode> _sortedNodes = new List<TyTaskNode>();
 
 		public void InitTree(TyStateAnalyzer analyzer, POGame.POGame root, List<PlayerTask> options)
-		{	
+		{
+			_sortedNodes.Clear();
 			_explorableNodes.Clear();
 			_nodesToEstimate.Clear();
 
@@ -40,18 +39,33 @@ namespace SabberStoneCoreAi.Tyche
 					node.AddValue(sim.value);
 				}
 				else
+				{
 					_explorableNodes.Add(node);
+					_sortedNodes.Add(node);
+				}
 
 				_nodesToEstimate.Add(task, node);
 			}
 		}
 
-		public void SimulateEpisode(System.Random random, int curEpisode, int totalEpisodes)
+		public void SimulateEpisode(System.Random random, int curEpisode, bool shouldExploit)
 		{
-			_episodeStart = TyUtility.GetSecondsSinceStart();
+			TyTaskNode nodeToExlore = null;
 
-			//TODO: no need to estimate VERY bad nodes:
-			TyTaskNode nodeToExlore = _explorableNodes[curEpisode % _explorableNodes.Count];
+
+			if(shouldExploit)
+			{
+				_sortedNodes.Sort((x, y) => y.TotalValue.CompareTo(x.TotalValue));
+				int count = ((int)(_sortedNodes.Count * 0.5 + 0.5));
+				nodeToExlore = _sortedNodes.GetUniformRandom(random, count);
+			}
+
+			//exploiting:
+			else
+			{
+				//TODO:
+				nodeToExlore = _explorableNodes[curEpisode % _explorableNodes.Count];
+			}
 
 			//should not be possible:
 			if (nodeToExlore == null)

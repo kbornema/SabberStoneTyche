@@ -9,6 +9,12 @@ namespace SabberStoneCoreAi.Tyche
 {
 	class TycheAgent : AbstractAgent
 	{
+		private const int MAX_EPISODES_FACTOR = 10;
+		private const double EXPLORE_TRESHOLD = 0.75;
+
+		private const int DEFAULT_NUM_EPISODES_MULTIPLIER = 100;
+		private const int LEARNING_NUM_EPISODES_MULTIPLIER = 10;
+
 		//TODO:
 		public static List<Card> GetUserCreatedDeck() { return null; }
 
@@ -21,23 +27,31 @@ namespace SabberStoneCoreAi.Tyche
 		private bool _isTurnBegin = true;
 		private bool _hasInitialized;
 
-		private bool _heroBasedWeights;
 		private double _turnTimeStart;
-
-		public bool PrintTurnTime = false;
+		private bool _heroBasedWeights;
+		private int _curEpisodeMultiplier;
+		private int _defaultEpisodeMultiplier;
+		
 		public Algorithm UsedAlgorithm = Algorithm.SearchTree;
+		public bool AdjustEpisodeMultiplier = false;
+		public bool PrintTurnTime = false;
 
 		public TycheAgent()
-			: this(TyStateWeights.GetDefault(), true)
+			: this(TyStateWeights.GetDefault(), true, DEFAULT_NUM_EPISODES_MULTIPLIER, true)
 		{		
 		}
 
-		private TycheAgent(TyStateWeights weights, bool heroBasedWeights)
+		private TycheAgent(TyStateWeights weights, bool heroBasedWeights, int episodeMultiplier, bool adjustEpisodeMultiplier)
 		{
+			_defaultEpisodeMultiplier = episodeMultiplier;
+			_curEpisodeMultiplier = episodeMultiplier;
 			_heroBasedWeights = heroBasedWeights;
+
 			_analyzer = new TyStateAnalyzer(weights);
 			_simTree = new TySimTree();
 			_random = new Random();
+
+			AdjustEpisodeMultiplier = adjustEpisodeMultiplier;
 		}
 
 		public override PlayerTask GetMove(POGame.POGame poGame)
@@ -79,20 +93,28 @@ namespace SabberStoneCoreAi.Tyche
 
 		private PlayerTask GetSimulationTreeTask(POGame.POGame poGame, List<PlayerTask> options)
 		{
-			if (!IsAllowedToSimulate())
+			double time = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
+
+			if (time >= TyConst.MAX_TURN_TIME)
+			{
+				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
+					TyDebug.LogError("Turn takes too long, fall back to greedy.");
+
 				return GetGreedyBestTask(poGame, options);
+			}
 
 			_simTree.InitTree(_analyzer, poGame, options);
 
 			//-1 because TurnEnd won't be looked at:
-			int numEpisodes = (int)((options.Count - 1) * 100);
+			int numEpisodes = (int)((options.Count - 1) * _curEpisodeMultiplier);
 
 			for (int i = 0; i < numEpisodes; i++)
 			{
 				if (!IsAllowedToSimulate())
 					break;
 
-				_simTree.SimulateEpisode(_random, i, numEpisodes);
+				bool shouldExploit = ((double)i / (double)numEpisodes) > EXPLORE_TRESHOLD;
+				_simTree.SimulateEpisode(_random, i, shouldExploit);
 			}
 
 			return _simTree.GetBestTask();
@@ -107,12 +129,12 @@ namespace SabberStoneCoreAi.Tyche
 		/// <summary> False if there is not enough time left to do simulations. </summary>
 		private bool IsAllowedToSimulate()
 		{
-			double t = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
+			double time = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
 
-			if (t >= TyConst.MAX_SIMULATION_TIME)
-			{
+			if (time >= TyConst.MAX_SIMULATION_TIME)
+			{	
 				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
-					TyDebug.LogWarning("Stopped simulations after " + t.ToString("0.000") + "s");
+					TyDebug.LogWarning("Stopped simulations after " + time.ToString("0.000") + "s");
 
 				return false;
 			}
@@ -130,11 +152,23 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			_isTurnBegin = true;
 
-			if (PrintTurnTime)
+			var timeNeeded = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
+
+			if (AdjustEpisodeMultiplier && UsedAlgorithm == Algorithm.SearchTree)
 			{
-				var diff = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
-				TyDebug.LogInfo("Turn took " + diff.ToString("0.000") + "s");
+				double diff = Math.Min(TyConst.DECREASE_SIMULATION_TIME - timeNeeded, 5.0);
+				double factor = 0.05;
+
+				//reduce more if above the time limit:
+				if(diff <= 0.0f)
+					factor = 0.2;
+
+				//increase/decrease depending on the time limit, also should be in interval [_defaultEpisodeMulitplier, -||- * 10]
+				_curEpisodeMultiplier = Math.Clamp(_curEpisodeMultiplier + (int)(factor * diff * _defaultEpisodeMultiplier), _defaultEpisodeMultiplier, _defaultEpisodeMultiplier * 10);
 			}
+
+			if (PrintTurnTime)
+				TyDebug.LogInfo("Turn took " + timeNeeded.ToString("0.000") + "s");
 		}
 
 		/// <summary> Called the first round (might be second round game wise) this agents is able to see the game and his opponent. </summary>
@@ -154,22 +188,17 @@ namespace SabberStoneCoreAi.Tyche
 		public override void FinalizeGame()
 		{
 		}
-
-		/// <summary> Returns an agent that won't change its strategy based on the current game. Used for learning given weights. </summary>
-		public static TycheAgent GetLearning(TyStateWeights weights)
-		{
-			return GetCustom(weights, false);
+		
+		public static TycheAgent GetLearningAgent(TyStateWeights weights)
+		{	
+			return new TycheAgent(weights, false, LEARNING_NUM_EPISODES_MULTIPLIER, false);
 		}
 
-		public static TycheAgent GetCustom(TyStateWeights weights, bool changeWeights)
+		public static TycheAgent GetTrainingAgent()
 		{
-			return new TycheAgent(weights, changeWeights);
-		}
-
-		/// <summary> Use default weights and change weights as given. </summary>
-		public static TycheAgent GetCustom(bool changeWeights)
-		{
-			return GetCustom(TyStateWeights.GetDefault(), changeWeights);
+			var agent =  new TycheAgent(TyStateWeights.GetDefault(), false, 0, false);
+			agent.UsedAlgorithm = Algorithm.Greedy;
+			return agent;
 		}
 
 		public override void InitializeAgent() { }
