@@ -52,20 +52,17 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			TyTaskNode nodeToExlore = null;
 
-
-			if(shouldExploit)
-			{
+			//exploiting:
+			if (shouldExploit)
+			{	
 				_sortedNodes.Sort((x, y) => y.TotalValue.CompareTo(x.TotalValue));
 				int count = ((int)(_sortedNodes.Count * 0.5 + 0.5));
 				nodeToExlore = _sortedNodes.GetUniformRandom(random, count);
 			}
 
-			//exploiting:
+			//explore:
 			else
-			{
-				//TODO:
 				nodeToExlore = _explorableNodes[curEpisode % _explorableNodes.Count];
-			}
 
 			//should not be possible:
 			if (nodeToExlore == null)

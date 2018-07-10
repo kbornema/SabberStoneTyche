@@ -65,10 +65,10 @@ namespace SabberStoneCoreAi
 				DeckFromEnum(DeckFu.Shaman)
 			};
 
-			//for (int i = 0; i < decks.Count; i++)
+			for (int i = 0; i < decks.Count; i++)
 			{
 				var myAgent = new TycheAgent(); //.GetCustom(false, 10);
-				//myAgent.PrintTurnTime = true;
+												//myAgent.PrintTurnTime = true;
 
 
 				//myAgent.PrintTurnTime = true;
@@ -79,7 +79,7 @@ namespace SabberStoneCoreAi
 
 				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
 				training.PrintMatchTimes = true;
-				training.RunRounds(DeckFromEnum(DeckFu.Shaman), DeckFromEnum(DeckFu.Shaman), ROUNDS, MATCHES_PER_ROUND);
+				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
 				training.PrintFinalResults();
 			}
 			

@@ -37,8 +37,17 @@ namespace SabberStoneCoreAi.Tyche.Testing
 		public void RunRounds(List<TyDeckHeroPair> decks0, List<TyDeckHeroPair> decks1, int rounds, int matchesPerRound)
 		{
 			var totalStartTime = TyUtility.GetSecondsSinceStart();
-
 			System.Random random = new Random();
+
+			var s1 = "";
+			for (int i = 0; i < decks0.Count; i++)
+				s1 += decks0[i].Name + ",";
+
+			var s2 = "";
+			for (int i = 0; i < decks1.Count; i++)
+				s2 += decks1[i].Name + ",";
+
+			TyDebug.LogInfo("Decks: " + s1 + " vs. " + s2);
 
 			for (int i = 0; i < rounds; i++)
 			{
@@ -46,15 +55,15 @@ namespace SabberStoneCoreAi.Tyche.Testing
 
 				var deck0 = decks0.GetUniformRandom(random);
 				var deck1 = decks1.GetUniformRandom(random);
-
-				var startPlayer = random.NextDouble() < 0.5 ? 1 : 2;
+				
+				var startPlayer = (i % 2) + 1;
 
 				RunMatches(deck0, deck1, matchesPerRound, startPlayer);
 
 				var roundTime = TyUtility.GetSecondsSinceStart() - roundStartTime;
 
 				if(PrintMatchTimes)
-					TyDebug.LogInfo(matchesPerRound + " matches took " + roundTime + " seconds. Total matches: " + _totalPlays);
+					PrintFinalResults(roundTime, matchesPerRound);
 			}
 
 			_totalTimeUsed = TyUtility.GetSecondsSinceStart() - totalStartTime;
@@ -90,9 +99,14 @@ namespace SabberStoneCoreAi.Tyche.Testing
 			_agent1Wins += gameStats.PlayerB_Wins;
 		}
 
+		private void PrintFinalResults(double time, int matches)
+		{
+			TyDebug.LogInfo("Result: " + _agent0.GetType().Name + ": " + ((float)_agent0Wins / (float)_totalPlays) * 100.0f + "% vs " + _agent1.GetType().Name + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%. " + matches + " matches took " + time.ToString("0.000") + "s");
+		}
+
 		public void PrintFinalResults()
 		{
-			TyDebug.LogInfo("Final results: " + _agent0.GetType().Name + ": " + ((float)_agent0Wins / (float)_totalPlays) * 100.0f + "% vs " + _agent1.GetType().Name + ": " + ((float)_agent1Wins / (float)_totalPlays) * 100.0f + "%. Took " + _totalTimeUsed.ToString("0.000") + "s");
+			PrintFinalResults(_totalTimeUsed, _totalPlays);
 		}
 	}
 }

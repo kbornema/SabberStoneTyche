@@ -15,7 +15,7 @@ namespace SabberStoneCoreAi.Tyche
 		private const int DEFAULT_NUM_EPISODES_MULTIPLIER = 100;
 		private const int LEARNING_NUM_EPISODES_MULTIPLIER = 10;
 
-		//TODO:
+		//TODO: create / choose a deck to play
 		public static List<Card> GetUserCreatedDeck() { return null; }
 
 		public enum Algorithm { Greedy, SearchTree }
@@ -68,7 +68,12 @@ namespace SabberStoneCoreAi.Tyche
 
 			//should not happen, but if, just return anything:
 			if (choosenTask == null)
+			{
+				if(TyConst.LOG_UNKNOWN_CORRECTIONS)
+					TyDebug.LogError("Choosen task was null!");
+
 				choosenTask = options.GetUniformRandom(_random);
+			}
 
 			if (choosenTask.PlayerTaskType == PlayerTaskType.END_TURN)
 				OnMyTurnEnd();
@@ -108,9 +113,11 @@ namespace SabberStoneCoreAi.Tyche
 			//-1 because TurnEnd won't be looked at:
 			int numEpisodes = (int)((options.Count - 1) * _curEpisodeMultiplier);
 
+			double simStart = TyUtility.GetSecondsSinceStart();
+
 			for (int i = 0; i < numEpisodes; i++)
 			{
-				if (!IsAllowedToSimulate())
+				if (!IsAllowedToSimulate(simStart, i, numEpisodes))
 					break;
 
 				bool shouldExploit = ((double)i / (double)numEpisodes) > EXPLORE_TRESHOLD;
@@ -127,14 +134,14 @@ namespace SabberStoneCoreAi.Tyche
 		}
 
 		/// <summary> False if there is not enough time left to do simulations. </summary>
-		private bool IsAllowedToSimulate()
+		private bool IsAllowedToSimulate(double startTime, int curEpisode, int maxEpisode)
 		{
-			double time = TyUtility.GetSecondsSinceStart() - _turnTimeStart;
+			double time = TyUtility.GetSecondsSinceStart() - startTime;
 
 			if (time >= TyConst.MAX_SIMULATION_TIME)
 			{	
 				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
-					TyDebug.LogWarning("Stopped simulations after " + time.ToString("0.000") + "s");
+					TyDebug.LogWarning("Stopped simulations after " + time.ToString("0.000") + "s and " + curEpisode + " of " + maxEpisode + " episodes.");
 
 				return false;
 			}
@@ -184,10 +191,6 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			_hasInitialized = false;
 		}
-
-		public override void FinalizeGame()
-		{
-		}
 		
 		public static TycheAgent GetLearningAgent(TyStateWeights weights)
 		{	
@@ -196,12 +199,15 @@ namespace SabberStoneCoreAi.Tyche
 
 		public static TycheAgent GetTrainingAgent()
 		{
-			var agent =  new TycheAgent(TyStateWeights.GetDefault(), false, 0, false);
+			const bool ADJUST_EPISODES = false;
+			const bool HERO_BASED_WEIGHTS = false;
+			var agent =  new TycheAgent(TyStateWeights.GetDefault(), HERO_BASED_WEIGHTS, 0, ADJUST_EPISODES);
 			agent.UsedAlgorithm = Algorithm.Greedy;
 			return agent;
 		}
 
 		public override void InitializeAgent() { }
 		public override void FinalizeAgent() { }
+		public override void FinalizeGame() { } 
 	}
 }
