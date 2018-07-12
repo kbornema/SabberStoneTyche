@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using SabberStoneCore.Model;
 using SabberStoneCoreAi.Meta;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace SabberStoneCoreAi
 {
@@ -62,25 +63,35 @@ namespace SabberStoneCoreAi
 			{
 				DeckFromEnum(DeckFu.Mage),
 				DeckFromEnum(DeckFu.Warrior),
-				DeckFromEnum(DeckFu.Shaman)
+				DeckFromEnum(DeckFu.Shaman),
+
+				DeckFromEnum(DeckFu.Druid),
+				DeckFromEnum(DeckFu.Warlock),
+				DeckFromEnum(DeckFu.Paladin),
+				DeckFromEnum(DeckFu.Rogue),
+				DeckFromEnum(DeckFu.Priest)
 			};
 
 			for (int i = 0; i < decks.Count; i++)
 			{
-				var myAgent = new TycheAgent(); //.GetCustom(false, 10);
-												//myAgent.PrintTurnTime = true;
+				var myAgent = TycheAgent.GetSearchTreeAgent(10); ////new TycheAgent(); //.GetCustom(false, 10);
+																 //myAgent.AdjustEpisodeMultiplier = false;
+
+				//myAgent.PrintTurnTime = true;
 
 
 				//myAgent.PrintTurnTime = true;
 				//myAgent.PrintTurnTime = true;
 				//myAgent.TrackMatchTime = true;
 
+
+				//var enemyAgent = new BotB.BotB();
 				var enemyAgent = TycheAgent.GetTrainingAgent();
 
 				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
 				training.PrintMatchTimes = true;
 				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
-				training.PrintFinalResults();
+				//training.PrintFinalResults();
 			}
 			
 			TyDebug.LogInfo("Press a key to close.");

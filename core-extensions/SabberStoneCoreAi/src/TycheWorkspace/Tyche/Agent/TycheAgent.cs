@@ -9,7 +9,7 @@ namespace SabberStoneCoreAi.Tyche
 {
 	class TycheAgent : AbstractAgent
 	{
-		private const int MAX_EPISODES_FACTOR = 10;
+		//x% of episodes below this value, are used for exploration, the remaining are used for exploitation:
 		private const double EXPLORE_TRESHOLD = 0.75;
 
 		private const int DEFAULT_NUM_EPISODES_MULTIPLIER = 100;
@@ -163,15 +163,17 @@ namespace SabberStoneCoreAi.Tyche
 
 			if (AdjustEpisodeMultiplier && UsedAlgorithm == Algorithm.SearchTree)
 			{
-				double diff = Math.Min(TyConst.DECREASE_SIMULATION_TIME - timeNeeded, 5.0);
+				const double MAX_DIFF = 4.0;
+				double diff = Math.Min(TyConst.DECREASE_SIMULATION_TIME - timeNeeded, MAX_DIFF);
 				double factor = 0.05;
 
 				//reduce more if above the time limit:
 				if(diff <= 0.0f)
 					factor = 0.2;
 
-				//increase/decrease depending on the time limit, also should be in interval [_defaultEpisodeMulitplier, -||- * 10]
-				_curEpisodeMultiplier = Math.Clamp(_curEpisodeMultiplier + (int)(factor * diff * _defaultEpisodeMultiplier), _defaultEpisodeMultiplier, _defaultEpisodeMultiplier * 10);
+				//simulate at max this value * _defaultEpisodeMultiplier:
+				const int MAX_EPISODE_MULTIPLIER = 4;
+				_curEpisodeMultiplier = Math.Clamp(_curEpisodeMultiplier + (int)(factor * diff * _defaultEpisodeMultiplier), _defaultEpisodeMultiplier, _defaultEpisodeMultiplier * MAX_EPISODE_MULTIPLIER);
 			}
 
 			if (PrintTurnTime)
@@ -197,11 +199,22 @@ namespace SabberStoneCoreAi.Tyche
 			return new TycheAgent(weights, false, LEARNING_NUM_EPISODES_MULTIPLIER, false);
 		}
 
-		public static TycheAgent GetTrainingAgent()
+		public static TycheAgent GetSearchTreeAgent(int episodeMultiplier)
+		{
+			return new TycheAgent(TyStateWeights.GetDefault(), true, episodeMultiplier, true);
+		}
+
+		public static TycheAgent GetTrainingAgent(float secretFactor = -1.0f)
 		{
 			const bool ADJUST_EPISODES = false;
 			const bool HERO_BASED_WEIGHTS = false;
-			var agent =  new TycheAgent(TyStateWeights.GetDefault(), HERO_BASED_WEIGHTS, 0, ADJUST_EPISODES);
+
+			var weights = TyStateWeights.GetDefault();
+
+			if(secretFactor >= 0.0f)
+				weights.SetWeight(TyStateWeights.WeightType.SecretFactor, secretFactor);
+
+			var agent =  new TycheAgent(weights, HERO_BASED_WEIGHTS, 0, ADJUST_EPISODES);
 			agent.UsedAlgorithm = Algorithm.Greedy;
 			return agent;
 		}

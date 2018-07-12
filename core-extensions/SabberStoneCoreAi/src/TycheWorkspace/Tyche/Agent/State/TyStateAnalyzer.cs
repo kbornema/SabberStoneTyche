@@ -38,8 +38,14 @@ namespace SabberStoneCoreAi.Tyche
 			float deckValue = Weights.GetWeight(TyStateWeights.WeightType.DeckFactor) * GetDeckValue(player);
 			float handValue = Weights.GetWeight(TyStateWeights.WeightType.HandFactor) * GetHandValues(player);
 			float minionValue = Weights.GetWeight(TyStateWeights.WeightType.MinionFactor) * GetMinionValues(player);
+			float secretValues = Weights.GetWeight(TyStateWeights.WeightType.SecretFactor) * GetSecretValues(player);
 
-			return emptyFieldValue + deckValue + healthValue + handValue + minionValue;
+			return emptyFieldValue + deckValue + healthValue + handValue + minionValue + secretValues;
+		}
+
+		private float GetSecretValues(TyState player)
+		{
+			return player.SecretValues;
 		}
 
 		private float GetMinionValues(TyState player)
@@ -84,6 +90,7 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			int firstThree = Math.Min(state.NumHandCards, 3);
 			int remaining = Math.Abs(state.NumHandCards - firstThree);
+			//3 times the points for the first three cards, 2 for all remaining cards:
 			return 3 * firstThree + 2 * remaining;
 		}
 	}

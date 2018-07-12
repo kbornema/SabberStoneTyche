@@ -1,10 +1,25 @@
-﻿using System;
+﻿using SabberStoneCore.Model.Entities;
+using SabberStoneCore.Tasks;
+using System;
 using System.Collections.Generic;
 
 namespace SabberStoneCoreAi.Tyche
 {
     public static class TyUtility
     {
+		public static Spell TryGetSecret(this PlayerTask task)
+		{	
+			if(task != null && task.HasSource && task.Source is Spell)
+			{
+				var spell = task.Source as Spell;
+
+				if (spell.IsSecret)
+					return spell;
+			}
+
+			return null;
+		}
+
 		public static double GetSecondsSinceStart()
 		{
 			return (double)Environment.TickCount / 1000.0;

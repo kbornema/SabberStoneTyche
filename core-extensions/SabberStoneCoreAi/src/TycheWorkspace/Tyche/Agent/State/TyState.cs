@@ -2,7 +2,6 @@
 using SabberStoneCore.Model;
 using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Tasks;
-using SabberStoneCoreAi.POGame;
 using System;
 using System.Text.RegularExpressions;
 
@@ -10,8 +9,9 @@ namespace SabberStoneCoreAi.Tyche
 {
 	/// <summary> Holds information about the state of the game for a single agent. </summary>
 	class TyState
-	{
+	{	
 		private const float DIVINE_SHIELD_VALUE = 2.0f;
+		private const float SECRET_COST_VALUE_FACTOR = 3.0f;
 
 		public int HeroHealth;
 		public int HeroArmor;
@@ -20,26 +20,33 @@ namespace SabberStoneCoreAi.Tyche
 		public int WeaponDurability;
 
 		public int TurnNumber;
+		public int NumSecrets;
+		public float SecretValues;
+
 		public int NumDeckCards;
 		public int NumHandCards;
 		public int NumMinionsOnBoard;
+
 		public int Fatigue;
 
 		public float MinionValues;
 
 		private TyState(){}
 
-		public static TyState FromSimulatedGame(POGame.POGame newState, Controller me)
+		public static TyState FromSimulatedGame(POGame.POGame newState, Controller me, PlayerTask task)
 		{
 			TyState s = new TyState
-			{
+			{	
 				HeroHealth = me.Hero.Health,
+				HeroArmor = me.Hero.Armor,
+
 				TurnNumber = newState.Turn,
+
 				NumDeckCards = me.DeckZone.Count,
 				NumHandCards = me.HandZone.Count,
 				NumMinionsOnBoard = me.BoardZone.Count,
+
 				Fatigue = me.Hero.Fatigue,
-				HeroArmor = me.Hero.Armor,
 				MinionValues = ComputeMinionValues(newState, me)
 			};
 
@@ -54,13 +61,37 @@ namespace SabberStoneCoreAi.Tyche
 			{
 				s.WeaponDamage = me.Hero.TotalAttackDamage;
 
-				//Player can at least attack once
+				//assume that the player can at least attack once:
 				if (s.WeaponDurability == 0)
 					s.WeaponDurability = 1;
 			}
 
+			ComputeSecretValues(s, me, task);
+
 			return s;
 		}
+
+		private static void ComputeSecretValues(TyState state, Controller player, PlayerTask task)
+		{
+			int numSecrets = player.SecretZone.Count;
+
+			//reduce the value for each additional secret by this factor:
+			const float ADDITIONAL_SECRET_FACTOR = 0.75f;
+			//use this as an estimated cost for opponent secrets:
+			const int ESTIMATED_SECRET_COST = 3;
+
+			float curValueFactor = 1.0f;
+
+			for (int i = 0; i < numSecrets; i++)
+			{
+				//TODO: certain secrets are better early/late game/ when having strong enemies etc... maybe incorporate that?
+
+				var cost = (task == null) ? ESTIMATED_SECRET_COST : player.SecretZone[i].Card.Cost;
+				state.SecretValues += cost * SECRET_COST_VALUE_FACTOR * curValueFactor;
+				curValueFactor *= ADDITIONAL_SECRET_FACTOR;
+			}
+		}
+		
 
 		public static bool CorrectBuggySimulation(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask task)
 		{

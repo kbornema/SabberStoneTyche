@@ -1,4 +1,5 @@
-﻿using SabberStoneCore.Tasks;
+﻿using SabberStoneCore.Model.Entities;
+using SabberStoneCore.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,8 +61,8 @@ namespace SabberStoneCoreAi.Tyche
 			//in this case use the old state and estimate the new state manually:
 			if (child == null)
 			{
-				myState = TyState.FromSimulatedGame(parent, parent.CurrentPlayer);
-				enemyState = TyState.FromSimulatedGame(parent, parent.CurrentOpponent);
+				myState = TyState.FromSimulatedGame(parent, parent.CurrentPlayer, task);
+				enemyState = TyState.FromSimulatedGame(parent, parent.CurrentOpponent, null);
 
 				//if the correction failes, assume the task is x% better/worse:
 				if (!TyState.CorrectBuggySimulation(myState, enemyState, parent, task))
@@ -70,8 +71,8 @@ namespace SabberStoneCoreAi.Tyche
 
 			else
 			{
-				myState = TyState.FromSimulatedGame(child, child.CurrentPlayer);
-				enemyState = TyState.FromSimulatedGame(child, child.CurrentOpponent);
+				myState = TyState.FromSimulatedGame(child, child.CurrentPlayer, task);
+				enemyState = TyState.FromSimulatedGame(child, child.CurrentOpponent, null);
 
 				//after END_TURN the players will be swapped for the simlated resultState:
 				if (task.PlayerTaskType == PlayerTaskType.END_TURN)
