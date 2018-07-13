@@ -1,4 +1,5 @@
 ﻿using SabberStoneCore.Model.Entities;
+using SabberStoneCore.Tasks;
 using System;
 
 namespace SabberStoneCoreAi.Tyche
@@ -9,10 +10,13 @@ namespace SabberStoneCoreAi.Tyche
 	class TyStateAnalyzer
 	{
 		public TyStateWeights Weights;
+		public int OwnPlayerId = -1;
+		public bool EstimateSecrets = true;
 
 		public TyStateAnalyzer()
 			: this(new TyStateWeights())
 		{
+		
 		}
 
 		public TyStateAnalyzer(TyStateWeights weights)
@@ -20,15 +24,30 @@ namespace SabberStoneCoreAi.Tyche
 			Weights = weights;
 		}
 
-		public float GetStateValue(TyState player, TyState enemy)
+		public bool IsMyPlayer(Controller c)
 		{
-			if (HasLost(enemy))
+			TyDebug.Assert(OwnPlayerId != -1);
+			return c.PlayerId == OwnPlayerId;
+		}
+
+		public float GetStateValue(TyState playerState, TyState enemyState, Controller player, Controller opponent, PlayerTask task)
+		{	
+			TyDebug.Assert(IsMyPlayer(player));
+			TyDebug.Assert(!IsMyPlayer(opponent));
+
+			if (EstimateSecrets)
+			{
+				TySecretUtil.CalculateValues(playerState, enemyState, player, opponent);
+				TySecretUtil.EstimateValues(enemyState, opponent);
+			}
+
+			if (HasLost(enemyState))
 				return Single.PositiveInfinity;
 
-			else if (HasLost(player))
+			else if (HasLost(playerState))
 				return Single.NegativeInfinity;
 
-			return GetStateValueFor(player, enemy) - GetStateValueFor(enemy, player);
+			return GetStateValueFor(playerState, enemyState) - GetStateValueFor(enemyState, playerState);
 		}
 
 		private float GetStateValueFor(TyState player, TyState enemy)
@@ -38,14 +57,14 @@ namespace SabberStoneCoreAi.Tyche
 			float deckValue = Weights.GetWeight(TyStateWeights.WeightType.DeckFactor) * GetDeckValue(player);
 			float handValue = Weights.GetWeight(TyStateWeights.WeightType.HandFactor) * GetHandValues(player);
 			float minionValue = Weights.GetWeight(TyStateWeights.WeightType.MinionFactor) * GetMinionValues(player);
-			float secretValues = Weights.GetWeight(TyStateWeights.WeightType.SecretFactor) * GetSecretValues(player);
+			float biasValues = Weights.GetWeight(TyStateWeights.WeightType.BiasFactor) * GetBiasValue(player);
 
-			return emptyFieldValue + deckValue + healthValue + handValue + minionValue + secretValues;
+			return emptyFieldValue + deckValue + healthValue + handValue + minionValue + biasValues;
 		}
 
-		private float GetSecretValues(TyState player)
+		private float GetBiasValue(TyState player)
 		{
-			return player.SecretValues;
+			return player.BiasValue;
 		}
 
 		private float GetMinionValues(TyState player)
@@ -62,7 +81,7 @@ namespace SabberStoneCoreAi.Tyche
 			return false;
 		}
 
-		/// <summary> Gives points for clearing clearing the minion zone of the given opponent. </summary>
+		/// <summary> Gives points for clearing the minion zone of the given opponent. </summary>
 		private float GetEmptyFieldValue(TyState state)
 		{
 			//its better to clear the board in later stages of the game (more enemies might appear each round):

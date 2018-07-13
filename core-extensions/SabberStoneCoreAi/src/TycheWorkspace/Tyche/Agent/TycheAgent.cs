@@ -36,6 +36,9 @@ namespace SabberStoneCoreAi.Tyche
 		public bool AdjustEpisodeMultiplier = false;
 		public bool PrintTurnTime = false;
 
+		private int _playerId;
+		public int PlayerId { get { return _playerId; } }
+
 		public TycheAgent()
 			: this(TyStateWeights.GetDefault(), true, DEFAULT_NUM_EPISODES_MULTIPLIER, true)
 		{		
@@ -60,7 +63,7 @@ namespace SabberStoneCoreAi.Tyche
 				CustomInit(poGame);
 
 			if (_isTurnBegin)
-				OnMyTurnBegin();
+				OnMyTurnBegin(poGame);
 
 			var options = poGame.CurrentPlayer.Options();
 
@@ -70,7 +73,9 @@ namespace SabberStoneCoreAi.Tyche
 			if (choosenTask == null)
 			{
 				if(TyConst.LOG_UNKNOWN_CORRECTIONS)
+				{	
 					TyDebug.LogError("Choosen task was null!");
+				}
 
 				choosenTask = options.GetUniformRandom(_random);
 			}
@@ -102,22 +107,22 @@ namespace SabberStoneCoreAi.Tyche
 
 			if (time >= TyConst.MAX_TURN_TIME)
 			{
-				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
-					TyDebug.LogError("Turn takes too long, fall back to greedy.");
-
+				TyDebug.LogError("Turn takes too long, fall back to greedy.");
 				return GetGreedyBestTask(poGame, options);
 			}
 
 			_simTree.InitTree(_analyzer, poGame, options);
 
 			//-1 because TurnEnd won't be looked at:
-			int numEpisodes = (int)((options.Count - 1) * _curEpisodeMultiplier);
+
+			int optionCount = options.Count - 1;
+			int numEpisodes = (int)((optionCount) * _curEpisodeMultiplier);
 
 			double simStart = TyUtility.GetSecondsSinceStart();
 
 			for (int i = 0; i < numEpisodes; i++)
 			{
-				if (!IsAllowedToSimulate(simStart, i, numEpisodes))
+				if (!IsAllowedToSimulate(simStart, i, numEpisodes, optionCount))
 					break;
 
 				bool shouldExploit = ((double)i / (double)numEpisodes) > EXPLORE_TRESHOLD;
@@ -134,22 +139,20 @@ namespace SabberStoneCoreAi.Tyche
 		}
 
 		/// <summary> False if there is not enough time left to do simulations. </summary>
-		private bool IsAllowedToSimulate(double startTime, int curEpisode, int maxEpisode)
+		private bool IsAllowedToSimulate(double startTime, int curEpisode, int maxEpisode, int options)
 		{
 			double time = TyUtility.GetSecondsSinceStart() - startTime;
 
 			if (time >= TyConst.MAX_SIMULATION_TIME)
 			{	
-				if (TyConst.LOG_SIMULATION_TIME_BREAKS)
-					TyDebug.LogWarning("Stopped simulations after " + time.ToString("0.000") + "s and " + curEpisode + " of " + maxEpisode + " episodes.");
-
+				TyDebug.LogWarning("Stopped simulations after " + time.ToString("0.000") + "s and " + curEpisode + " of " + maxEpisode + " episodes. Having " + options + " options.");
 				return false;
 			}
 
 			return true;
 		}
 
-		private void OnMyTurnBegin()
+		private void OnMyTurnBegin(POGame.POGame state)
 		{
 			_isTurnBegin = false;
 			_turnTimeStart = TyUtility.GetSecondsSinceStart();
@@ -173,17 +176,29 @@ namespace SabberStoneCoreAi.Tyche
 
 				//simulate at max this value * _defaultEpisodeMultiplier:
 				const int MAX_EPISODE_MULTIPLIER = 4;
-				_curEpisodeMultiplier = Math.Clamp(_curEpisodeMultiplier + (int)(factor * diff * _defaultEpisodeMultiplier), _defaultEpisodeMultiplier, _defaultEpisodeMultiplier * MAX_EPISODE_MULTIPLIER);
+				_curEpisodeMultiplier = Math.Clamp(_curEpisodeMultiplier + (int)(factor * diff * _defaultEpisodeMultiplier),
+													_defaultEpisodeMultiplier,
+													_defaultEpisodeMultiplier * MAX_EPISODE_MULTIPLIER);
 			}
 
 			if (PrintTurnTime)
+			{	
 				TyDebug.LogInfo("Turn took " + timeNeeded.ToString("0.000") + "s");
+			}
+
+			if(timeNeeded >= TyConst.MAX_TURN_TIME)
+			{
+				TyDebug.LogWarning("Turn took " + timeNeeded.ToString("0.000") + "s");
+			}
 		}
 
 		/// <summary> Called the first round (might be second round game wise) this agents is able to see the game and his opponent. </summary>
 		private void CustomInit(POGame.POGame initialState)
 		{
 			_hasInitialized = true;
+
+			_playerId = initialState.CurrentPlayer.PlayerId;
+			_analyzer.OwnPlayerId = _playerId;
 
 			if (_heroBasedWeights)
 				_analyzer.Weights = TyStateWeights.GetHeroBased(initialState.CurrentPlayer.HeroClass, initialState.CurrentOpponent.HeroClass);
@@ -204,18 +219,20 @@ namespace SabberStoneCoreAi.Tyche
 			return new TycheAgent(TyStateWeights.GetDefault(), true, episodeMultiplier, true);
 		}
 
-		public static TycheAgent GetTrainingAgent(float secretFactor = -1.0f)
+		public static TycheAgent GetTrainingAgent(float biasFactor = -1.0f, bool useSecrets = false)
 		{
 			const bool ADJUST_EPISODES = false;
 			const bool HERO_BASED_WEIGHTS = false;
 
 			var weights = TyStateWeights.GetDefault();
 
-			if(secretFactor >= 0.0f)
-				weights.SetWeight(TyStateWeights.WeightType.SecretFactor, secretFactor);
+			if(biasFactor >= 0.0f)
+				weights.SetWeight(TyStateWeights.WeightType.BiasFactor, biasFactor);
 
 			var agent =  new TycheAgent(weights, HERO_BASED_WEIGHTS, 0, ADJUST_EPISODES);
 			agent.UsedAlgorithm = Algorithm.Greedy;
+			agent._analyzer.EstimateSecrets = useSecrets;
+
 			return agent;
 		}
 

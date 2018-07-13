@@ -57,12 +57,18 @@ namespace SabberStoneCoreAi.Tyche
 			TyState myState = null;
 			TyState enemyState = null;
 
+			Controller player = null;
+			Controller opponent = null;
+
 			//it's a buggy state, mostly related to equipping/using weapons on heroes etc.
 			//in this case use the old state and estimate the new state manually:
 			if (child == null)
 			{
-				myState = TyState.FromSimulatedGame(parent, parent.CurrentPlayer, task);
-				enemyState = TyState.FromSimulatedGame(parent, parent.CurrentOpponent, null);
+				player = parent.CurrentPlayer;
+				opponent = parent.CurrentOpponent;
+
+				myState = TyState.FromSimulatedGame(parent, player, task);
+				enemyState = TyState.FromSimulatedGame(parent, opponent, null);
 
 				//if the correction failes, assume the task is x% better/worse:
 				if (!TyState.CorrectBuggySimulation(myState, enemyState, parent, task))
@@ -71,19 +77,23 @@ namespace SabberStoneCoreAi.Tyche
 
 			else
 			{
-				myState = TyState.FromSimulatedGame(child, child.CurrentPlayer, task);
-				enemyState = TyState.FromSimulatedGame(child, child.CurrentOpponent, null);
+				player = child.CurrentPlayer;
+				opponent = child.CurrentOpponent;
 
-				//after END_TURN the players will be swapped for the simlated resultState:
-				if (task.PlayerTaskType == PlayerTaskType.END_TURN)
+				//happens sometimes even with/without TURN_END, idk
+				if (!analyzer.IsMyPlayer(player))
 				{
-					TyState tmpState = myState;
-					myState = enemyState;
-					enemyState = tmpState;
+					player = child.CurrentOpponent;
+					opponent = child.CurrentPlayer;
 				}
+				
+				myState = TyState.FromSimulatedGame(child, player, task);
+				enemyState = TyState.FromSimulatedGame(child, opponent, null);
 			}
 
-			return analyzer.GetStateValue(myState, enemyState) * valueFactor;
+			TyDebug.Assert(analyzer.IsMyPlayer(player));
+			TyDebug.Assert(!analyzer.IsMyPlayer(opponent));
+			return analyzer.GetStateValue(myState, enemyState, player, opponent, task) * valueFactor;
 		}
 	}
 }

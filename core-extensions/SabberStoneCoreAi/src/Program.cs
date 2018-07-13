@@ -23,8 +23,6 @@ namespace SabberStoneCoreAi
 
 		private static void Main(string[] args)
 		{
-			
-
 			_randomLateAgent = new List<AbstractAgent> { GetAgent(Agent.RandomLate) };
 			_faceHunterAgent = new List<AbstractAgent> { GetAgent(Agent.FaceHunter) };
 			_randomAgent = new List<AbstractAgent> { GetAgent(Agent.Random) };
@@ -35,6 +33,7 @@ namespace SabberStoneCoreAi
 														GetAgent(Agent.Random),
 														GetAgent(Agent.BotB) };
 
+			TyDebug.Assert(false);
 			//var c = Cards.FromName("Medivh, the Guardian");
 			//TyDebug.LogInfo(c.AssetId);
 
@@ -65,32 +64,26 @@ namespace SabberStoneCoreAi
 				DeckFromEnum(DeckFu.Warrior),
 				DeckFromEnum(DeckFu.Shaman),
 
-				DeckFromEnum(DeckFu.Druid),
-				DeckFromEnum(DeckFu.Warlock),
-				DeckFromEnum(DeckFu.Paladin),
-				DeckFromEnum(DeckFu.Rogue),
-				DeckFromEnum(DeckFu.Priest)
+				//DeckFromEnum(DeckFu.Druid),
+				//DeckFromEnum(DeckFu.Warlock),
+				//DeckFromEnum(DeckFu.Paladin),
+				//DeckFromEnum(DeckFu.Rogue),
+				//DeckFromEnum(DeckFu.Priest)
 			};
 
 			for (int i = 0; i < decks.Count; i++)
 			{
-				var myAgent = TycheAgent.GetSearchTreeAgent(10); ////new TycheAgent(); //.GetCustom(false, 10);
-																 //myAgent.AdjustEpisodeMultiplier = false;
-
-				//myAgent.PrintTurnTime = true;
-
-
-				//myAgent.PrintTurnTime = true;
-				//myAgent.PrintTurnTime = true;
-				//myAgent.TrackMatchTime = true;
-
+				var myAgent = TycheAgent.GetTrainingAgent(0.0f, false); //new TycheAgent();//TycheAgent.GetSearchTreeAgent(10);
+				//var myAgent = TycheAgent.GetSearchTreeAgent(20);
+				//var myAgent = TycheAgent.GetTrainingAgent(4.0f, true);
 
 				//var enemyAgent = new BotB.BotB();
-				var enemyAgent = TycheAgent.GetTrainingAgent();
+				var enemyAgent = TycheAgent.GetTrainingAgent(0.0f, false);
 
 				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
 				training.PrintMatchTimes = true;
 				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
+
 				//training.PrintFinalResults();
 			}
 			
@@ -182,7 +175,9 @@ namespace SabberStoneCoreAi
 				if (keyValuePair.Length == 2)
 					keyValues.Add(keyValuePair[0], keyValuePair[1]);
 				else
+				{	
 					TyDebug.LogError("Arg '" + args[i] + "' is not allowed");
+				}
 			}
 
 

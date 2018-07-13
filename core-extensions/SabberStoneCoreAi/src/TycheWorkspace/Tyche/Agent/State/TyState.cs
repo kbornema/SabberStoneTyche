@@ -10,9 +10,6 @@ namespace SabberStoneCoreAi.Tyche
 	/// <summary> Holds information about the state of the game for a single agent. </summary>
 	class TyState
 	{	
-		private const float DIVINE_SHIELD_VALUE = 2.0f;
-		private const float SECRET_COST_VALUE_FACTOR = 3.0f;
-
 		public int HeroHealth;
 		public int HeroArmor;
 
@@ -20,8 +17,8 @@ namespace SabberStoneCoreAi.Tyche
 		public int WeaponDurability;
 
 		public int TurnNumber;
-		public int NumSecrets;
-		public float SecretValues;
+
+		public float BiasValue;
 
 		public int NumDeckCards;
 		public int NumHandCards;
@@ -47,7 +44,7 @@ namespace SabberStoneCoreAi.Tyche
 				NumMinionsOnBoard = me.BoardZone.Count,
 
 				Fatigue = me.Hero.Fatigue,
-				MinionValues = ComputeMinionValues(newState, me)
+				MinionValues = TyMinionUtil.ComputeMinionValues(me)
 			};
 
 			if (me.Hero.Weapon != null)
@@ -66,32 +63,8 @@ namespace SabberStoneCoreAi.Tyche
 					s.WeaponDurability = 1;
 			}
 
-			ComputeSecretValues(s, me, task);
-
 			return s;
 		}
-
-		private static void ComputeSecretValues(TyState state, Controller player, PlayerTask task)
-		{
-			int numSecrets = player.SecretZone.Count;
-
-			//reduce the value for each additional secret by this factor:
-			const float ADDITIONAL_SECRET_FACTOR = 0.75f;
-			//use this as an estimated cost for opponent secrets:
-			const int ESTIMATED_SECRET_COST = 3;
-
-			float curValueFactor = 1.0f;
-
-			for (int i = 0; i < numSecrets; i++)
-			{
-				//TODO: certain secrets are better early/late game/ when having strong enemies etc... maybe incorporate that?
-
-				var cost = (task == null) ? ESTIMATED_SECRET_COST : player.SecretZone[i].Card.Cost;
-				state.SecretValues += cost * SECRET_COST_VALUE_FACTOR * curValueFactor;
-				curValueFactor *= ADDITIONAL_SECRET_FACTOR;
-			}
-		}
-		
 
 		public static bool CorrectBuggySimulation(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask task)
 		{
@@ -117,7 +90,9 @@ namespace SabberStoneCoreAi.Tyche
 				CorrectHeroPower(lastPlayerState, lastEnemyState, lastState, task, ref corrected);
 			
 			if (TyConst.LOG_UNKNOWN_CORRECTIONS && !corrected)
+			{
 				TyDebug.LogError("Unknown buggy PlayerTask: " + task.FullPrint());
+			}
 
 			return corrected;
 		}
@@ -162,59 +137,6 @@ namespace SabberStoneCoreAi.Tyche
 			corrected = true;
 		}
 
-		private static float ComputeMinionValue(int health, int attackDmg, int attacksPerTurn, bool hasTaunt = false, bool poisonous = false, bool hasDeathRattle = false, bool hasInspire = false, bool hasDivineShield = false, bool hasLifeSteal = false, bool hasCharge = false, bool hasStealh = false, bool hasBattleCry = false)
-		{
-			float value = 0.0f;
-
-			var numBonusAttacks = Math.Max(attacksPerTurn - 1, 0);
-
-			value += (health + attackDmg + attackDmg * numBonusAttacks);
-
-			if (hasTaunt)
-				value += 2;
-
-			if (poisonous)
-				value += 2;
-
-			if (hasDeathRattle)
-				value += 2;
-
-			if (hasInspire)
-				value += 2;
-
-			if (hasDivineShield)
-				value += DIVINE_SHIELD_VALUE;
-
-			if (hasLifeSteal)
-				value += 2;
-
-			if (hasCharge)
-				value += 1;
-
-			if (hasStealh)
-				value += 1;
-
-			if (hasBattleCry)
-				value += 1;
-
-			return value;
-		}
-
-		private static float ComputeMinionValue(Minion minion)
-		{
-			return ComputeMinionValue(minion.Health, minion.AttackDamage, minion.NumAttacksThisTurn, minion.HasTaunt, minion.Poisonous, minion.HasDeathrattle, minion.HasInspire, minion.HasDivineShield, minion.HasLifeSteal, minion.HasCharge, minion.HasStealth, minion.HasBattleCry);
-		}
-
-		private static float ComputeMinionValues(POGame.POGame poGame, Controller player)
-		{
-			float value = 0.0f;
-
-			for (int i = 0; i < player.BoardZone.Count; i++)
-				value += ComputeMinionValue(player.BoardZone[i]);
-
-			return value;
-		}
-
 		private static void CorrectHeroAttack(TyState lastPlayerState, TyState lastEnemyState, POGame.POGame lastState, PlayerTask playerTask, ref bool corrected)
 		{
 			var target = playerTask.Target;
@@ -249,7 +171,7 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			//didn't take damage:
 			if (targetMinion.HasDivineShield)
-				ownerState.MinionValues -= DIVINE_SHIELD_VALUE;
+				ownerState.MinionValues -= TyMinionUtil.DIVINE_SHIELD_VALUE;
 
 			else
 			{
@@ -265,7 +187,7 @@ namespace SabberStoneCoreAi.Tyche
 		private static void RemoveMinion(Minion minion, TyState ownerState, TyState opponentState, PlayerTask task)
 		{
 			//remove the minion value from the overall minion values and remove it from the board
-			ownerState.MinionValues -= ComputeMinionValue(minion);
+			ownerState.MinionValues -= TyMinionUtil.ComputeMinionValue(minion);
 			ownerState.NumMinionsOnBoard--;
 
 			if (minion.HasDeathrattle)
@@ -300,7 +222,7 @@ namespace SabberStoneCoreAi.Tyche
 				int health = 0;
 				if (FindNumberValues(text, ref dmg, ref health))
 				{
-					ownerState.MinionValues += ComputeMinionValue(health, dmg, 1);
+					ownerState.MinionValues += TyMinionUtil.ComputeMinionValue(health, dmg, 1);
 					//just assume that the minion has some sort of (unknown) ability:
 					//Testing.TyDebug.LogInfo("Summoned " + dmg + "/" + health);
 					ownerState.MinionValues += 3;
@@ -429,9 +351,19 @@ namespace SabberStoneCoreAi.Tyche
 			}
 
 			if (TyConst.LOG_UNKNOWN_CORRECTIONS)
+			{
 				TyDebug.LogError("Could find number values in " + text);
+			}
 
 			return false;
+		}
+
+		public float GetAverageMinionValue()
+		{
+			if (NumMinionsOnBoard <= 0)
+				return 0.0f;
+
+			return MinionValues / (float)NumMinionsOnBoard;
 		}
 	}
 

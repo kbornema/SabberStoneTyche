@@ -1,4 +1,5 @@
-﻿using SabberStoneCore.Model.Entities;
+﻿using SabberStoneCore.Model;
+using SabberStoneCore.Model.Entities;
 using SabberStoneCore.Tasks;
 using System;
 using System.Collections.Generic;
@@ -6,20 +7,7 @@ using System.Collections.Generic;
 namespace SabberStoneCoreAi.Tyche
 {
     public static class TyUtility
-    {
-		public static Spell TryGetSecret(this PlayerTask task)
-		{	
-			if(task != null && task.HasSource && task.Source is Spell)
-			{
-				var spell = task.Source as Spell;
-
-				if (spell.IsSecret)
-					return spell;
-			}
-
-			return null;
-		}
-
+    {	
 		public static double GetSecondsSinceStart()
 		{
 			return (double)Environment.TickCount / 1000.0;
@@ -79,6 +67,31 @@ namespace SabberStoneCoreAi.Tyche
 			}
 
 			return result;
+		}
+
+		/// <summary> BaseMana + TemporaryMana </summary>
+		public static int GetAvailableMana(this Controller c)
+		{
+			return c.BaseMana + c.TemporaryMana;
+		}
+
+		/// <summary> BaseMana available in a turn. </summary>
+		public static int GetBaseManaInTurn(int turn)
+		{
+			return Math.Min((turn + 1) / 2, 10);
+		}
+
+		public static Spell TryGetSecret(this PlayerTask task)
+		{
+			if (task != null && task.HasSource && task.Source is Spell)
+			{
+				var spell = task.Source as Spell;
+
+				if (spell.IsSecret)
+					return spell;
+			}
+
+			return null;
 		}
 	}
 }

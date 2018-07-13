@@ -56,6 +56,7 @@ namespace SabberStoneCoreAi.Tyche
 			if (shouldExploit)
 			{	
 				_sortedNodes.Sort((x, y) => y.TotalValue.CompareTo(x.TotalValue));
+				//exploit only 50% best nodes:
 				int count = ((int)(_sortedNodes.Count * 0.5 + 0.5));
 				nodeToExlore = _sortedNodes.GetUniformRandom(random, count);
 			}
