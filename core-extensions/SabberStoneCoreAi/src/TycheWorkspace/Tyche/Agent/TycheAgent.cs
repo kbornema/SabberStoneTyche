@@ -13,7 +13,7 @@ namespace SabberStoneCoreAi.Tyche
 		private const double EXPLORE_TRESHOLD = 0.75;
 
 		private const int DEFAULT_NUM_EPISODES_MULTIPLIER = 100;
-		private const int LEARNING_NUM_EPISODES_MULTIPLIER = 10;
+		private const int LEARNING_NUM_EPISODES_MULTIPLIER = 20;
 
 		//TODO: create / choose a deck to play
 		public static List<Card> GetUserCreatedDeck() { return null; }
@@ -114,7 +114,6 @@ namespace SabberStoneCoreAi.Tyche
 			_simTree.InitTree(_analyzer, poGame, options);
 
 			//-1 because TurnEnd won't be looked at:
-
 			int optionCount = options.Count - 1;
 			int numEpisodes = (int)((optionCount) * _curEpisodeMultiplier);
 

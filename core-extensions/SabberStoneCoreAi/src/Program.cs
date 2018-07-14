@@ -42,13 +42,13 @@ namespace SabberStoneCoreAi
 			//foreach(var card in allCards)
 			//	TyDebug.LogInfo(card.FullPrint());
 
-			QuickTest();
+			//QuickTest();
 			//AllMirroredDecksAllAgents();
 
-			//if (args.Length == 0)
-			//	DebugLearn();
-			//else
-			//	LearnFromExe(args);
+			if (args.Length == 0)
+				DebugLearn();
+			else
+				LearnFromExe(args);
 		}
 
 		private static void QuickTest()
@@ -73,7 +73,7 @@ namespace SabberStoneCoreAi
 
 			for (int i = 0; i < decks.Count; i++)
 			{
-				var myAgent = TycheAgent.GetTrainingAgent(0.0f, false); //new TycheAgent();//TycheAgent.GetSearchTreeAgent(10);
+				var myAgent = TycheAgent.GetTrainingAgent(12.0f, true); //new TycheAgent();//TycheAgent.GetSearchTreeAgent(10);
 				//var myAgent = TycheAgent.GetSearchTreeAgent(20);
 				//var myAgent = TycheAgent.GetTrainingAgent(4.0f, true);
 
@@ -161,9 +161,11 @@ namespace SabberStoneCoreAi
 		{
 			TyDebug.LogInfo("Executable Learn");
 
-			var enemy = TycheAgent.GetTrainingAgent();
+			var enemy = TycheAgent.GetTrainingAgent(0.0f, false);
 
 			TyLearnSetup learnSetup = new TyLearnSetup();
+			learnSetup.Rounds = 50;
+			learnSetup.MatchesPerRound = 1;
 
 			Dictionary<string, string> keyValues = new Dictionary<string, string>();
 			char[] split = { '=' };

@@ -197,10 +197,9 @@ namespace SabberStoneCoreAi.Tyche
 			}
 
 			else if (myClass == CardClass.MAGE)
-			{
-				//TODO: hardcoded, try to learn the value instead:
-				const float MAGE_BIAS_FACTOR = 4.0f;
-				return new TyStateWeights(3.973221f, 9.552423f, 9.033211f, 2.2092f, 1.850587f, MAGE_BIAS_FACTOR);
+			{	
+				//old: 3.973221f, 9.552423f, 9.033211f, 2.2092f, 1.850587f, 4.0f
+				return new TyStateWeights(3.133729f, 9.927018f, 2.963968f, 6.498888f, 4.516192f, 4.645887f);
 			}
 
 			else if(myClass == CardClass.DRUID)

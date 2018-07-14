@@ -7,7 +7,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 {
 	public class CsvHelper
 	{
-		public enum Column { Id, Generation, NumPlays, Current, Average, EmptyField, HealthFactor, DeckFactor, HandFactor, MinionFactor, Count }
+		public enum Column { Id, Generation, NumPlays, Current, Average, EmptyField, HealthFactor, DeckFactor, HandFactor, MinionFactor, BiasFactor, Count }
 
 		private string[] _line;
 		public string[] GetLine() { return _line; }

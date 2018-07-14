@@ -10,7 +10,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
     class TyLearnSetup
     {
 		/// <summary> Higher values make fitness more accurate. </summary>
-		private const int NUM_TRAININGS = 2;
+		private const int NUM_TRAININGS = 1;
 		private const float MIN_WEIGHT = 0.0f;
 		private const float MAX_WEIGHT = 10.0f;
 		
