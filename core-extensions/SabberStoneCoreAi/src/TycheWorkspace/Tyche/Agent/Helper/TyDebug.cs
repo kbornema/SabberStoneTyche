@@ -5,7 +5,6 @@ namespace SabberStoneCoreAi.Tyche
 {
 	class TyDebug
 	{
-		/// <summary> Makes sure that each log level is on the same indent. Should be the length of the longest LogLevel. </summary>
 		private const int LOG_LEVEL_LENGTH = 7;
 		public enum LogLevel { Info, Warning, Error, Assert }
 		private static readonly ConsoleColor[] LogColors = { ConsoleColor.White, ConsoleColor.Yellow, ConsoleColor.Red, ConsoleColor.Cyan };

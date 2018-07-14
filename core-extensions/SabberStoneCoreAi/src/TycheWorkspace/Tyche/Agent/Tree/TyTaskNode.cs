@@ -13,14 +13,13 @@ namespace SabberStoneCoreAi.Tyche
 		private PlayerTask _task;
 		public PlayerTask Task { get { return _task; } }
 
-		//TODO: maybe seperate EndTurnValues and BuggyValues:
-		//aswell as visits and buggyVisits
-
 		private float _totalValue;
 		public float TotalValue { get { return _totalValue; } }
 
 		private int _visits;
 		public int Visits { get { return _visits; } }
+
+		public int BuggyCount = 0;
 
 		private TySimTree _tree;
 
@@ -37,6 +36,7 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			if (simResult.IsBuggy)
 			{
+				BuggyCount++;
 				AddValue(simResult.value);
 				return;
 			}

@@ -17,6 +17,7 @@ namespace SabberStoneCoreAi.Tyche
 
 		//TODO: create / choose a deck to play
 		public static List<Card> GetUserCreatedDeck() { return null; }
+		public List<Card> UserCreatedDeck { get { return GetUserCreatedDeck(); } }
 
 		public enum Algorithm { Greedy, SearchTree }
 

@@ -81,7 +81,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 				Train(children, myDeck, enemyDeck, enemyAgent);
 
-				_currentPopulation = MixPopulations(_currentPopulation, children);
+				_currentPopulation = MixPopulations(_currentPopulation, children, step + 1);
 
 				Log("Generation " + (step));
 				LogPopulation(_currentPopulation);
@@ -152,7 +152,7 @@ namespace SabberStoneCoreAi.Tyche.Learning
 			File.WriteAllLines(fileName, _globalFileLog);
 		}
 
-		private List<TyWeightsLearner> MixPopulations(List<TyWeightsLearner> oldPopulation, List<TyWeightsLearner> offspring)
+		private List<TyWeightsLearner> MixPopulations(List<TyWeightsLearner> oldPopulation, List<TyWeightsLearner> offspring, int generation)
 		{
 			List<TyWeightsLearner> tmpPopulation = new List<TyWeightsLearner>();
 			tmpPopulation.AddRange(oldPopulation);
@@ -163,6 +163,15 @@ namespace SabberStoneCoreAi.Tyche.Learning
 
 			for (int i = 0; i < PopulationSize; i++)
 				newPopulaton.Add(tmpPopulation[i]);
+
+			const int NUM_RAND_CHILDREN = 2;
+
+			//replace the worst NUM_RAND_CHILDREN individuals by random learners:
+			for (int i = 0; i < NUM_RAND_CHILDREN; i++)
+			{
+				TyWeightsLearner randOffspring = new TyWeightsLearner(new TyStateWeights(_random, MIN_WEIGHT, MAX_WEIGHT), generation, _individualId);
+				newPopulaton[newPopulaton.Count - 1 - i] = randOffspring;
+			}
 
 			return newPopulaton;
 		}
