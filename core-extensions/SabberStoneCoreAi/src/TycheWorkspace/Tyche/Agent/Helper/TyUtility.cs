@@ -18,6 +18,11 @@ namespace SabberStoneCoreAi.Tyche
 			return (1.0f - t) * a + t * b;
 		}
 
+		public static float InverseLerp(float value, float min, float max)
+		{
+			return (value - min) / (max - min);
+		}
+
 		public static float RandFloat(this System.Random r)
 		{
 			return (float)r.NextDouble();
@@ -72,7 +77,7 @@ namespace SabberStoneCoreAi.Tyche
 		/// <summary> BaseMana + TemporaryMana </summary>
 		public static int GetAvailableMana(this Controller c)
 		{
-			return c.BaseMana + c.TemporaryMana;
+			return c.BaseMana + c.TemporaryMana - c.OverloadLocked;
 		}
 
 		/// <summary> BaseMana available in a turn. </summary>
@@ -81,17 +86,31 @@ namespace SabberStoneCoreAi.Tyche
 			return Math.Min((turn + 1) / 2, 10);
 		}
 
-		public static Spell TryGetSecret(this PlayerTask task)
+		public static Minion TryGetMinion(this PlayerTask task)
 		{
-			if (task != null && task.HasSource && task.Source is Spell)
-			{
-				var spell = task.Source as Spell;
-
-				if (spell.IsSecret)
-					return spell;
-			}
+			if (task != null && task.HasSource && task.Source is Minion)
+				return task.Source as Minion;
 
 			return null;
 		}
+
+		public static Spell TryGetSpell(this PlayerTask task)
+		{
+			if (task != null && task.HasSource && task.Source is Spell)
+				return task.Source as Spell;
+
+			return null;
+		}
+
+		public static Spell TryGetSecret(this PlayerTask task)
+		{
+			var spell = TryGetSpell(task);
+
+			if (spell != null && spell.IsSecret)
+				return spell;
+
+			return null;
+		}
+
 	}
 }

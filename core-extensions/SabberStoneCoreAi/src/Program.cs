@@ -53,37 +53,35 @@ namespace SabberStoneCoreAi
 
 		private static void QuickTest()
 		{
-			const int ROUNDS = 2;
+			const int ROUNDS = 40;
 			const int MATCHES_PER_ROUND = 1;
 			TyDebug.LogInfo("Quick Test Setup");
 			TyDebug.LogInfo("Total matches to play: " + (ROUNDS * MATCHES_PER_ROUND));
 
 			List<List<TyDeckHeroPair>> decks = new List<List<TyDeckHeroPair>>
 			{
-				DeckFromEnum(DeckFu.Mage),
+				DeckFromEnum(DeckFu.Shaman)
+				/*
 				DeckFromEnum(DeckFu.Warrior),
-				DeckFromEnum(DeckFu.Shaman),
 				DeckFromEnum(DeckFu.Druid),
 				DeckFromEnum(DeckFu.Warlock),
 				DeckFromEnum(DeckFu.Paladin),
 				DeckFromEnum(DeckFu.Rogue),
-				DeckFromEnum(DeckFu.Priest)
+				DeckFromEnum(DeckFu.Priest),
+				DeckFromEnum(DeckFu.Mage),
+				*/
 			};
 
 			for (int j = 0; j < decks.Count; j++)
-			{
-				for (int i = 0; i < decks.Count; i++)
-				{
-					var myAgent = TycheAgent.GetSearchTreeAgent(20);
-					var enemyAgent = TycheAgent.GetTrainingAgent(0.0f, false);
+			{	
+				var myAgent = TycheAgent.GetSearchTreeAgent(20);
+				var enemyAgent = TycheAgent.GetTrainingAgent(0.0f, false);
 
-					TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
-					//training.PrintMatchTimes = true;
-					training.RunRounds(decks[i], decks[j], ROUNDS, MATCHES_PER_ROUND);
-					training.PrintFinalResults();
-				}
+				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
+				//training.PrintMatchTimes = true;
+				training.RunRounds(decks[j], decks[j], ROUNDS, MATCHES_PER_ROUND);
+				training.PrintFinalResults();
 			}
-
 			
 			TyDebug.LogInfo("Press a key to close.");
 			Console.ReadLine();

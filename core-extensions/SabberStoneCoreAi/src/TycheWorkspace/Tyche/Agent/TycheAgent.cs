@@ -1,6 +1,7 @@
 ﻿using SabberStoneCore.Model;
 using SabberStoneCore.Tasks;
 using SabberStoneCoreAi.Agent;
+using SabberStoneCoreAi.Meta;
 using SabberStoneCoreAi.POGame;
 using System;
 using System.Collections.Generic;
@@ -9,15 +10,14 @@ namespace SabberStoneCoreAi.Tyche
 {
 	class TycheAgent : AbstractAgent
 	{
+		public static List<Card> GetUserCreatedDeck() { return Decks.MidrangeJadeShaman; }
+		public List<Card> UserCreatedDeck { get { return GetUserCreatedDeck(); } }
+
 		//x% of episodes below this value, are used for exploration, the remaining are used for exploitation:
 		private const double EXPLORE_TRESHOLD = 0.75;
 
 		private const int DEFAULT_NUM_EPISODES_MULTIPLIER = 100;
 		private const int LEARNING_NUM_EPISODES_MULTIPLIER = 20;
-
-		//TODO: create / choose a deck to play
-		public static List<Card> GetUserCreatedDeck() { return null; }
-		public List<Card> UserCreatedDeck { get { return GetUserCreatedDeck(); } }
 
 		public enum Algorithm { Greedy, SearchTree }
 
@@ -80,7 +80,7 @@ namespace SabberStoneCoreAi.Tyche
 
 				choosenTask = options.GetUniformRandom(_random);
 			}
-
+				
 			if (choosenTask.PlayerTaskType == PlayerTaskType.END_TURN)
 				OnMyTurnEnd();
 
@@ -129,7 +129,8 @@ namespace SabberStoneCoreAi.Tyche
 				_simTree.SimulateEpisode(_random, i, shouldExploit);
 			}
 
-			return _simTree.GetBestTask();
+			var bestNode = _simTree.GetBestNode();
+			return bestNode.Task;
 		}
 
 		private PlayerTask GetGreedyBestTask(POGame.POGame poGame, List<PlayerTask> options)
@@ -231,7 +232,7 @@ namespace SabberStoneCoreAi.Tyche
 
 			var agent =  new TycheAgent(weights, HERO_BASED_WEIGHTS, 0, ADJUST_EPISODES);
 			agent.UsedAlgorithm = Algorithm.Greedy;
-			agent._analyzer.EstimateSecrets = useSecrets;
+			agent._analyzer.EstimateSecretsAndSpells = useSecrets;
 
 			return agent;
 		}

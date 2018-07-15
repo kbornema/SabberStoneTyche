@@ -11,7 +11,7 @@ namespace SabberStoneCoreAi.Tyche
 	{
 		public TyStateWeights Weights;
 		public int OwnPlayerId = -1;
-		public bool EstimateSecrets = true;
+		public bool EstimateSecretsAndSpells = true;
 
 		public TyStateAnalyzer()
 			: this(new TyStateWeights())
@@ -35,10 +35,15 @@ namespace SabberStoneCoreAi.Tyche
 			TyDebug.Assert(IsMyPlayer(player));
 			TyDebug.Assert(!IsMyPlayer(opponent));
 
-			if (EstimateSecrets)
+			if (EstimateSecretsAndSpells)
 			{
 				TySecretUtil.CalculateValues(playerState, enemyState, player, opponent);
 				TySecretUtil.EstimateValues(enemyState, opponent);
+
+				var spell = task.TryGetSpell();
+
+				if(spell != null && !spell.IsSecret)
+					TySpellUtil.CalculateValues(playerState, enemyState, player, opponent, task, spell);
 			}
 
 			if (HasLost(enemyState))

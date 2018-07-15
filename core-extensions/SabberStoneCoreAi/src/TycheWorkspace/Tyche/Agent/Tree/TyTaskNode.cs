@@ -19,8 +19,6 @@ namespace SabberStoneCoreAi.Tyche
 		private int _visits;
 		public int Visits { get { return _visits; } }
 
-		public int BuggyCount = 0;
-
 		private TySimTree _tree;
 
 		public TyTaskNode(TySimTree tree, TyStateAnalyzer analyzer, PlayerTask task, float totalValue)
@@ -36,7 +34,6 @@ namespace SabberStoneCoreAi.Tyche
 		{
 			if (simResult.IsBuggy)
 			{
-				BuggyCount++;
 				AddValue(simResult.value);
 				return;
 			}

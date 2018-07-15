@@ -66,6 +66,15 @@ namespace SabberStoneCoreAi.Tyche
 			if (me.Hero.IsFrozen)
 				s.WeaponDamage = 0;
 
+			var minion = task.TryGetMinion();
+
+			if (minion != null)
+			{
+				//give reward/punishment of minions cost less/more than usual:
+				float diff = (float)minion.Card.Cost - (float)minion.Cost;
+				s.BiasValue += diff * 1.5f;
+			}
+
 			return s;
 		}
 

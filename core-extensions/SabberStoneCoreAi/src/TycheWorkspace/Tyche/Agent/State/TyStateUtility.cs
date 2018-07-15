@@ -95,5 +95,11 @@ namespace SabberStoneCoreAi.Tyche
 			TyDebug.Assert(!analyzer.IsMyPlayer(opponent));
 			return analyzer.GetStateValue(myState, enemyState, player, opponent, task) * valueFactor;
 		}
+
+		/// <summary> Rounds before neutralMana are punished, later it will be rewarded. </summary>
+		public static float LateReward(int mana, int neutralMana, float reward)
+		{
+			return reward * (mana - neutralMana);
+		}
 	}
 }
