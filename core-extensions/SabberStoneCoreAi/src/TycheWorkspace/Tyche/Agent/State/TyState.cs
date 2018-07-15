@@ -17,15 +17,14 @@ namespace SabberStoneCoreAi.Tyche
 		public int WeaponDurability;
 
 		public int TurnNumber;
-
-		public float BiasValue;
-
+		
 		public int NumDeckCards;
 		public int NumHandCards;
 		public int NumMinionsOnBoard;
 
 		public int Fatigue;
 
+		public float BiasValue;
 		public float MinionValues;
 
 		private TyState(){}
@@ -62,6 +61,10 @@ namespace SabberStoneCoreAi.Tyche
 				if (s.WeaponDurability == 0)
 					s.WeaponDurability = 1;
 			}
+
+			//aka, can't attack:
+			if (me.Hero.IsFrozen)
+				s.WeaponDamage = 0;
 
 			return s;
 		}

@@ -60,13 +60,16 @@ namespace SabberStoneCoreAi.Tyche
 			return _estimatedBelowMana[manaCost];
 		}
 
-		public static float ComputeMinionValue(int health, int attackDmg, int attacksPerTurn, bool hasTaunt = false, bool poisonous = false, bool hasDeathRattle = false, bool hasInspire = false, bool hasDivineShield = false, bool hasLifeSteal = false, bool hasCharge = false, bool hasStealh = false, bool hasBattleCry = false)
+		public static float ComputeMinionValue(int health, int attackDmg, int attacksPerTurn, bool hasTaunt = false, bool poisonous = false, bool hasDeathRattle = false, bool hasInspire = false, bool hasDivineShield = false, bool hasLifeSteal = false, bool hasCharge = false, bool hasStealh = false, bool hasBattleCry = false, bool isFrozen = false)
 		{
 			float value = 0.0f;
 
-			var numBonusAttacks = Math.Max(attacksPerTurn - 1, 0);
-
-			value += (health + attackDmg + attackDmg * numBonusAttacks);
+			//if its frozen, it cant attack;
+			if (!isFrozen)
+			{
+				var numBonusAttacks = Math.Max(attacksPerTurn - 1, 0);
+				value += (health + attackDmg + attackDmg * numBonusAttacks);
+			}
 
 			if (hasTaunt)
 				value += 2;
@@ -99,8 +102,9 @@ namespace SabberStoneCoreAi.Tyche
 		}
 
 		public static float ComputeMinionValue(Minion minion)
-		{
-			return ComputeMinionValue(minion.Health, minion.AttackDamage, minion.NumAttacksThisTurn, minion.HasTaunt, minion.Poisonous, minion.HasDeathrattle, minion.HasInspire, minion.HasDivineShield, minion.HasLifeSteal, minion.HasCharge, minion.HasStealth, minion.HasBattleCry);
+		{	
+			float value = ComputeMinionValue(minion.Health, minion.AttackDamage, minion.NumAttacksThisTurn, minion.HasTaunt, minion.Poisonous, minion.HasDeathrattle, minion.HasInspire, minion.HasDivineShield, minion.HasLifeSteal, minion.HasCharge, minion.HasStealth, minion.HasBattleCry, minion.IsFrozen);
+			return value;
 		}
 
 		public static float ComputeMinionValues(Controller player)

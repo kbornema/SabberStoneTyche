@@ -42,18 +42,18 @@ namespace SabberStoneCoreAi
 			//foreach(var card in allCards)
 			//	TyDebug.LogInfo(card.FullPrint());
 
-			//QuickTest();
+			QuickTest();
 			//AllMirroredDecksAllAgents();
 
-			if (args.Length == 0)
-				DebugLearn();
-			else
-				LearnFromExe(args);
+			//if (args.Length == 0)
+			//	DebugLearn();
+			//else
+			//	LearnFromExe(args);
 		}
 
 		private static void QuickTest()
 		{
-			const int ROUNDS = 100;
+			const int ROUNDS = 2;
 			const int MATCHES_PER_ROUND = 1;
 			TyDebug.LogInfo("Quick Test Setup");
 			TyDebug.LogInfo("Total matches to play: " + (ROUNDS * MATCHES_PER_ROUND));
@@ -63,29 +63,27 @@ namespace SabberStoneCoreAi
 				DeckFromEnum(DeckFu.Mage),
 				DeckFromEnum(DeckFu.Warrior),
 				DeckFromEnum(DeckFu.Shaman),
-
-				//DeckFromEnum(DeckFu.Druid),
-				//DeckFromEnum(DeckFu.Warlock),
-				//DeckFromEnum(DeckFu.Paladin),
-				//DeckFromEnum(DeckFu.Rogue),
-				//DeckFromEnum(DeckFu.Priest)
+				DeckFromEnum(DeckFu.Druid),
+				DeckFromEnum(DeckFu.Warlock),
+				DeckFromEnum(DeckFu.Paladin),
+				DeckFromEnum(DeckFu.Rogue),
+				DeckFromEnum(DeckFu.Priest)
 			};
 
-			for (int i = 0; i < decks.Count; i++)
+			for (int j = 0; j < decks.Count; j++)
 			{
-				var myAgent = TycheAgent.GetTrainingAgent(12.0f, true); //new TycheAgent();//TycheAgent.GetSearchTreeAgent(10);
-				//var myAgent = TycheAgent.GetSearchTreeAgent(20);
-				//var myAgent = TycheAgent.GetTrainingAgent(4.0f, true);
+				for (int i = 0; i < decks.Count; i++)
+				{
+					var myAgent = TycheAgent.GetSearchTreeAgent(20);
+					var enemyAgent = TycheAgent.GetTrainingAgent(0.0f, false);
 
-				//var enemyAgent = new BotB.BotB();
-				var enemyAgent = TycheAgent.GetTrainingAgent(0.0f, false);
-
-				TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
-				training.PrintMatchTimes = true;
-				training.RunRounds(decks[i], decks[i], ROUNDS, MATCHES_PER_ROUND);
-
-				//training.PrintFinalResults();
+					TyMatchSetup training = new TyMatchSetup(myAgent, enemyAgent);
+					//training.PrintMatchTimes = true;
+					training.RunRounds(decks[i], decks[j], ROUNDS, MATCHES_PER_ROUND);
+					training.PrintFinalResults();
+				}
 			}
+
 			
 			TyDebug.LogInfo("Press a key to close.");
 			Console.ReadLine();
